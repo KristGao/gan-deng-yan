@@ -63,7 +63,11 @@ type GameState = {
   roundResults: RoundResult[];
   chatMessages: ChatMessage[];
   diceRolls: Record<number, number | null>;
+  hostId: number | null;
+  gameKey: string;
 };
+
+type UserRole = "host" | "participant" | null;
 
 const IDLE_MEMBERS = [
   { name: "Soyeon", avatar: "https://i.pinimg.com/originals/9e/3d/8c/9e3d8c1b7b1b1b1b1b1b1b1b1b1b1b1b.jpg" }, // Placeholder pattern
@@ -120,7 +124,18 @@ const TRANSLATIONS = {
     logPlayed: "{0} played {1} ({2})",
     logMultiplierUp: "💥 Multiplier x{0}!",
     logWonRound: "{0} won the round{1}!",
-    logAndDrew: " and drew a card"
+    logAndDrew: " and drew a card",
+    enterGameKey: "Enter Game Key",
+    gameKeyPlaceholder: "Enter key to become host...",
+    verifyKey: "VERIFY",
+    wrongKey: "Wrong key!",
+    becomeHost: "BECOME HOST",
+    joinAsParticipant: "JOIN AS PARTICIPANT",
+    hostControls: "Host: Create room, set coins, add bots",
+    participantControls: "Participant: Choose seat, edit name",
+    waitingForHost: "Waiting for host to start...",
+    youAreHost: "You are the HOST",
+    youAreParticipant: "You are a PARTICIPANT"
   },
   zh: {
     title: "蛋仔派对！",
@@ -157,7 +172,18 @@ const TRANSLATIONS = {
     logPlayed: "{0} 打出了 {1} ({2})",
     logMultiplierUp: "💥 倍数翻倍 x{0}!",
     logWonRound: "{0} 赢得了这轮{1}!",
-    logAndDrew: " 并摸了一张牌"
+    logAndDrew: " 并摸了一张牌",
+    enterGameKey: "输入游戏密钥",
+    gameKeyPlaceholder: "输入密钥成为主持人...",
+    verifyKey: "验证",
+    wrongKey: "密钥错误！",
+    becomeHost: "成为主持人",
+    joinAsParticipant: "以参与人加入",
+    hostControls: "主持人：创建房间、设置金币、添加机器人",
+    participantControls: "参与人：选择座位、修改昵称",
+    waitingForHost: "等待主持人开始游戏...",
+    youAreHost: "你是主持人",
+    youAreParticipant: "你是参与人"
   }
 };
 
@@ -195,8 +221,17 @@ export default function App() {
     roundResults: [],
     chatMessages: [],
     diceRolls: {},
+    hostId: null,
+    gameKey: "",
   });
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
+  
+  // Role and key verification states
+  const [userRole, setUserRole] = useState<UserRole>(null);
+  const [showKeyInput, setShowKeyInput] = useState(false);
+  const [keyInput, setKeyInput] = useState("");
+  const [keyError, setKeyError] = useState("");
+  const GAME_KEY = "001";
 
   const t = (key: keyof typeof TRANSLATIONS["en"], ...args: any[]) => {
     let str = TRANSLATIONS[lang][key] || TRANSLATIONS["en"][key];
@@ -366,6 +401,8 @@ export default function App() {
       roundResults: [],
       chatMessages: [],
       diceRolls: Object.fromEntries(players.map(p => [p.id, null])),
+      hostId: state.hostId,
+      gameKey: state.gameKey,
     });
     setSelectedCards([]);
   };
@@ -706,7 +743,129 @@ export default function App() {
     alert(t("copied"));
   };
 
+  // Role selection handlers
+  const handleBecomeHost = () => {
+    setShowKeyInput(true);
+    setKeyError("");
+  };
+
+  const handleJoinAsParticipant = () => {
+    setUserRole("participant");
+    setShowKeyInput(false);
+  };
+
+  const verifyGameKey = () => {
+    if (keyInput === GAME_KEY) {
+      setUserRole("host");
+      setShowKeyInput(false);
+      setKeyError("");
+      // Set first available seat for host
+      const emptyIndex = setupPlayers.findIndex((p) => p === null);
+      if (emptyIndex !== -1) {
+        joinTable(emptyIndex);
+      }
+    } else {
+      setKeyError(t("wrongKey"));
+    }
+  };
+
+  const isHost = userRole === "host";
+  const isParticipant = userRole === "participant";
+
   if (state.status === "setup") {
+    // Role selection screen
+    if (!userRole) {
+      return (
+        <div className="min-h-screen bg-yellow-400 flex flex-col items-center justify-center p-4 font-sans">
+          <button
+            onClick={() => setLang(lang === "en" ? "zh" : "en")}
+            className="absolute top-4 right-4 z-50 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-md font-black text-sky-500 hover:bg-white transition-colors border-2 border-sky-100"
+          >
+            {lang === "en" ? "中文" : "English"}
+          </button>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-center mb-8"
+          >
+            <h1 className="text-5xl font-black text-white drop-shadow-[0_5px_0_rgba(0,0,0,0.2)] tracking-tighter italic mb-4">
+              {t("title")}
+            </h1>
+            <p className="text-yellow-900 font-bold text-lg opacity-80">
+              {t("subtitle")}
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md"
+          >
+            {!showKeyInput ? (
+              <div className="flex flex-col gap-4">
+                <h2 className="text-2xl font-black text-zinc-800 text-center mb-4">
+                  选择你的角色
+                </h2>
+                <button
+                  onClick={handleBecomeHost}
+                  className="py-5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-xl shadow-[0_5px_0_#e11d48] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3"
+                >
+                  <User size={28} /> {t("becomeHost")}
+                </button>
+                <p className="text-xs text-zinc-500 text-center">
+                  {t("hostControls")}
+                </p>
+                <div className="h-px bg-zinc-200 my-2" />
+                <button
+                  onClick={handleJoinAsParticipant}
+                  className="py-5 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-black text-xl shadow-[0_5px_0_#0ea5e9] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3"
+                >
+                  <Users size={28} /> {t("joinAsParticipant")}
+                </button>
+                <p className="text-xs text-zinc-500 text-center">
+                  {t("participantControls")}
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4">
+                <h2 className="text-2xl font-black text-zinc-800 text-center mb-4">
+                  {t("enterGameKey")}
+                </h2>
+                <input
+                  type="text"
+                  value={keyInput}
+                  onChange={(e) => setKeyInput(e.target.value)}
+                  placeholder={t("gameKeyPlaceholder")}
+                  className="w-full text-2xl font-black text-zinc-800 border-b-4 border-yellow-400 focus:outline-none text-center py-2"
+                />
+                {keyError && (
+                  <p className="text-rose-500 font-bold text-center">{keyError}</p>
+                )}
+                <button
+                  onClick={verifyGameKey}
+                  className="py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-lg shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all"
+                >
+                  {t("verifyKey")}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowKeyInput(false);
+                    setKeyInput("");
+                    setKeyError("");
+                  }}
+                  className="py-3 bg-zinc-300 hover:bg-zinc-400 text-zinc-700 rounded-2xl font-bold text-base transition-all"
+                >
+                  返回
+                </button>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      );
+    }
+
+    // Main game setup screen
     return (
       <div className="min-h-screen bg-yellow-400 flex flex-col items-center justify-center p-4 font-sans overflow-hidden">
         <button
@@ -715,6 +874,14 @@ export default function App() {
         >
           {lang === "en" ? "中文" : "English"}
         </button>
+        
+        {/* Role indicator */}
+        <div className="absolute top-4 left-4 z-50">
+          <div className={`px-4 py-2 rounded-full shadow-md font-black text-white ${isHost ? "bg-rose-500" : "bg-sky-500"}`}>
+            {isHost ? t("youAreHost") : t("youAreParticipant")}
+          </div>
+        </div>
+
         <motion.div
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -742,6 +909,7 @@ export default function App() {
             const angle = angles[i];
             const x = 40 * Math.cos((angle * Math.PI) / 180);
             const y = 40 * Math.sin((angle * Math.PI) / 180);
+            const isMySeat = myPlayerId === i;
 
             return (
               <motion.div
@@ -754,25 +922,31 @@ export default function App() {
                     <motion.img
                       whileHover={{ scale: 1.1 }}
                       src={p.avatar}
-                      className="w-24 h-24 rounded-full bg-white border-4 border-white shadow-xl"
+                      className={`w-24 h-24 rounded-full bg-white border-4 shadow-xl ${isMySeat ? "border-rose-400" : "border-white"}`}
                     />
                     <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md text-xs font-black text-zinc-800 whitespace-nowrap">
-                      {p.name}
+                      {p.name} {isMySeat && "(我)"}
                     </div>
-                    <button
-                      onClick={() => joinTable(i)}
-                      className="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X size={16} />
-                    </button>
+                    {/* Only allow leaving own seat */}
+                    {isMySeat && (
+                      <button
+                        onClick={() => joinTable(i)}
+                        className="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  <button
-                    onClick={() => joinTable(i)}
-                    className="w-20 h-20 rounded-full bg-yellow-200/50 border-4 border-dashed border-yellow-100 flex items-center justify-center text-yellow-100 hover:bg-yellow-200 transition-colors"
-                  >
-                    <Plus size={32} />
-                  </button>
+                  /* Only show empty seat button if not occupied and user hasn't joined yet */
+                  (isHost || myPlayerId === null) && (
+                    <button
+                      onClick={() => joinTable(i)}
+                      className="w-20 h-20 rounded-full bg-yellow-200/50 border-4 border-dashed border-yellow-100 flex items-center justify-center text-yellow-100 hover:bg-yellow-200 transition-colors"
+                    >
+                      <Plus size={32} />
+                    </button>
+                  )
                 )}
               </motion.div>
             );
@@ -812,49 +986,60 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <div className="mt-2">
-              <label className="text-xs font-black text-zinc-400 uppercase tracking-widest">
-                {t("initialCoins")}
-              </label>
-              <input
-                type="number"
-                value={initialCoins}
-                onChange={(e) => setInitialCoins(Math.max(10, parseInt(e.target.value) || 10))}
-                className="w-full text-xl font-black text-zinc-800 border-b-4 border-yellow-400 focus:outline-none"
-              />
-            </div>
+            {/* Only host can set initial coins */}
+            {isHost && (
+              <div className="mt-2">
+                <label className="text-xs font-black text-zinc-400 uppercase tracking-widest">
+                  {t("initialCoins")}
+                </label>
+                <input
+                  type="number"
+                  value={initialCoins}
+                  onChange={(e) => setInitialCoins(Math.max(10, parseInt(e.target.value) || 10))}
+                  className="w-full text-xl font-black text-zinc-800 border-b-4 border-yellow-400 focus:outline-none"
+                />
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-wrap gap-3 w-full">
-            {!isMultiplayer ? (
+          {/* Host controls */}
+          {isHost ? (
+            <div className="flex flex-wrap gap-3 w-full">
+              {!isMultiplayer ? (
+                <button
+                  onClick={createMultiplayerRoom}
+                  className="flex-1 min-w-[140px] py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  <Users size={20} /> {t("hostOnline")}
+                </button>
+              ) : (
+                <button
+                  onClick={copyInviteLink}
+                  className="flex-1 min-w-[140px] py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all flex flex-col items-center justify-center leading-tight"
+                >
+                  <span className="text-xs opacity-80">{t("room")}: {roomId}</span>
+                  <span>{t("copyLink")}</span>
+                </button>
+              )}
               <button
-                onClick={createMultiplayerRoom}
-                className="flex-1 min-w-[140px] py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                onClick={addAI}
+                className="flex-1 min-w-[120px] py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#3b82f6] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 whitespace-nowrap"
               >
-                <Users size={20} /> {t("hostOnline")}
+                <Bot size={20} /> {t("addBot")}
               </button>
-            ) : (
               <button
-                onClick={copyInviteLink}
-                className="flex-1 min-w-[140px] py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all flex flex-col items-center justify-center leading-tight"
+                onClick={startGame}
+                className="flex-[2] min-w-[140px] py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-xl shadow-[0_5px_0_#e11d48] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 whitespace-nowrap"
               >
-                <span className="text-xs opacity-80">{t("room")}: {roomId}</span>
-                <span>{t("copyLink")}</span>
+                <PlayIcon size={24} /> {t("start")}
               </button>
-            )}
-            <button
-              onClick={addAI}
-              className="flex-1 min-w-[120px] py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#3b82f6] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 whitespace-nowrap"
-            >
-              <Bot size={20} /> {t("addBot")}
-            </button>
-            <button
-              onClick={startGame}
-              className="flex-[2] min-w-[140px] py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-xl shadow-[0_5px_0_#e11d48] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 whitespace-nowrap"
-            >
-              <PlayIcon size={24} /> {t("start")}
-            </button>
-          </div>
+            </div>
+          ) : (
+            /* Participant waiting message */
+            <div className="w-full py-4 bg-zinc-200 rounded-2xl font-bold text-zinc-600 text-center">
+              {t("waitingForHost")}
+            </div>
+          )}
         </div>
       </div>
     );
