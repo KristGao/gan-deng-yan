@@ -56,6 +56,17 @@ async function startServer() {
       }
     });
 
+    // Dice roll synchronization - merge dice results
+    socket.on("update_dice_roll", (roomId, playerId, diceValue) => {
+      if (rooms[roomId] && rooms[roomId].state) {
+        const state = rooms[roomId].state;
+        state.diceRolls[playerId] = diceValue;
+        rooms[roomId].state = state;
+        // Broadcast to everyone including sender
+        io.to(roomId).emit("state_updated", state);
+      }
+    });
+
     // Setup phase synchronization
     socket.on("update_setup_players", (roomId, setupPlayers) => {
       if (rooms[roomId]) {

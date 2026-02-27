@@ -473,33 +473,43 @@ export default function App() {
     setIsRolling(true);
     playSound("play");
 
-    // Each human player rolls their own dice
-    const newRolls = { ...state.diceRolls };
+    const myRoll = Math.floor(Math.random() * 6) + 1;
     
     if (isMultiplayer) {
-      // In multiplayer, only roll for yourself
+      // In multiplayer, send own dice roll to server
       if (myPlayerId !== null) {
-        newRolls[myPlayerId] = Math.floor(Math.random() * 6) + 1;
+        // Also handle AI players if host
+        const newRolls = { ...state.diceRolls, [myPlayerId]: myRoll };
+        
+        if (myPlayerId === 0) {
+          // Host also rolls for AI
+          state.players.forEach(p => {
+            if (p.isAI) {
+              newRolls[p.id] = Math.floor(Math.random() * 6) + 1;
+            }
+          });
+        }
+        
+        // Send to server for merging
+        socket?.emit("update_dice_roll", roomId, myPlayerId, myRoll);
+        
+        // If host with AI, also update AI rolls
+        if (myPlayerId === 0) {
+          state.players.forEach(p => {
+            if (p.isAI) {
+              socket?.emit("update_dice_roll", roomId, p.id, newRolls[p.id]);
+            }
+          });
+        }
       }
     } else {
-      // Single player: roll for all human players
+      // Single player: roll for everyone
+      const newRolls = { ...state.diceRolls };
       state.players.forEach(p => {
-        if (!p.isAI) {
-          newRolls[p.id] = Math.floor(Math.random() * 6) + 1;
-        }
+        newRolls[p.id] = Math.floor(Math.random() * 6) + 1;
       });
+      updateState({ ...state, diceRolls: newRolls });
     }
-    
-    // AI players roll (only host handles AI in multiplayer)
-    if (!isMultiplayer || myPlayerId === 0) {
-      state.players.forEach(p => {
-        if (p.isAI) {
-          newRolls[p.id] = Math.floor(Math.random() * 6) + 1;
-        }
-      });
-    }
-    
-    updateState({ ...state, diceRolls: newRolls });
   };
 
   // Effect to check if all players have rolled and process results (host only)
