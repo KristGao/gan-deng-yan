@@ -438,9 +438,9 @@ export default function App() {
     }
 
     const deck = createDeck();
-    const players: Player[] = activePlayers.map((p, i) => ({
+    // Keep original seat index as player id to maintain consistency with myPlayerId
+    const players: Player[] = activePlayers.map((p) => ({
       ...p,
-      id: i,
       hand: deck.splice(0, 5), // Everyone gets 5 cards initially
       coins: initialCoins,
     }));
@@ -542,28 +542,32 @@ export default function App() {
     }
 
     const deck = createDeck();
-    const winnerIndex = activePlayers.findIndex(p => p.id === state.winner);
-    const starterIndex = winnerIndex !== -1 ? winnerIndex : 0;
+    // Find winner's position in activePlayers array
+    const winnerArrayIndex = activePlayers.findIndex(p => p.id === state.winner);
+    const starterArrayIndex = winnerArrayIndex !== -1 ? winnerArrayIndex : 0;
 
     const newPlayers = activePlayers.map((p, i) => ({
       ...p,
-      hand: deck.splice(0, i === starterIndex ? 6 : 5),
+      hand: deck.splice(0, i === starterArrayIndex ? 6 : 5),
     }));
 
     newPlayers.forEach((p) => p.hand.sort((a, b) => a.rank - b.rank));
     playSound("start");
+
+    // Get the actual player id of the starter
+    const starterPlayerId = newPlayers[starterArrayIndex].id;
 
     updateState({
       ...state,
       status: "playing",
       players: newPlayers,
       deck,
-      currentPlayerIndex: starterIndex,
+      currentPlayerIndex: starterPlayerId,
       currentPlay: null,
       lastPlayPlayerIndex: null,
       winner: null,
       multiplier: 1,
-      logs: [t("logNewRound", newPlayers[starterIndex].name)],
+      logs: [t("logNewRound", newPlayers[starterArrayIndex].name)],
       roundResults: [],
     });
     setSelectedCards([]);
