@@ -505,15 +505,16 @@ export default function App() {
         const maxRoll = Math.max(...rolls.map(r => r.roll));
         const topRollers = rolls.filter(r => r.roll === maxRoll);
         const starter = topRollers[Math.floor(Math.random() * topRollers.length)];
-        const starterIndex = s.players.findIndex(p => p.id === starter.id);
+        const starterArrayIndex = s.players.findIndex(p => p.id === starter.id);
+        const starterPlayerId = starter.id;
 
         // Give the starter an extra card
         const newPlayers = [...s.players];
         const newDeck = [...s.deck];
         if (newDeck.length > 0) {
-          newPlayers[starterIndex] = {
-            ...newPlayers[starterIndex],
-            hand: [...newPlayers[starterIndex].hand, newDeck.pop()!].sort((a, b) => a.rank - b.rank)
+          newPlayers[starterArrayIndex] = {
+            ...newPlayers[starterArrayIndex],
+            hand: [...newPlayers[starterArrayIndex].hand, newDeck.pop()!].sort((a, b) => a.rank - b.rank)
           };
         }
 
@@ -522,7 +523,7 @@ export default function App() {
           players: newPlayers,
           deck: newDeck,
           status: "playing",
-          currentPlayerIndex: starterIndex,
+          currentPlayerIndex: starterPlayerId,
           logs: [
             t("logDiceRolls", rolls.map(r => `${r.name}(${r.roll})`).join(", ")),
             t("logGoesFirst", starter.name)
@@ -580,26 +581,28 @@ export default function App() {
 
   const nextTurn = (
     currentState: GameState,
-    nextPlayerIndex: number,
+    nextPlayerId: number,
     newDeck: CardType[],
     newPlayers: Player[],
     newCurrentPlay: Play | null,
-    newLastPlayPlayerIndex: number | null,
+    newLastPlayPlayerId: number | null,
   ) => {
     let currentPlay = newCurrentPlay;
-    if (newLastPlayPlayerIndex === nextPlayerIndex) {
+    if (newLastPlayPlayerId === nextPlayerId) {
       currentPlay = null;
       let drawnCard = null;
       if (newDeck.length > 0) {
         drawnCard = newDeck.pop()!;
-        const winner = newPlayers[nextPlayerIndex];
+        const winnerIndex = newPlayers.findIndex(p => p.id === nextPlayerId);
+        const winner = newPlayers[winnerIndex];
         const newHand = [...winner.hand, drawnCard].sort(
           (a, b) => a.rank - b.rank,
         );
-        newPlayers[nextPlayerIndex] = { ...winner, hand: newHand };
+        newPlayers[winnerIndex] = { ...winner, hand: newHand };
       }
+      const winnerPlayer = newPlayers.find(p => p.id === nextPlayerId)!;
       addLog(
-        t("logWonRound", newPlayers[nextPlayerIndex].name, drawnCard ? t("logAndDrew") : "")
+        t("logWonRound", winnerPlayer.name, drawnCard ? t("logAndDrew") : "")
       );
     }
 
@@ -607,9 +610,9 @@ export default function App() {
       ...currentState,
       players: newPlayers,
       deck: newDeck,
-      currentPlayerIndex: nextPlayerIndex,
+      currentPlayerIndex: nextPlayerId,
       currentPlay: currentPlay,
-      lastPlayPlayerIndex: newLastPlayPlayerIndex,
+      lastPlayPlayerIndex: newLastPlayPlayerId,
     });
     setSelectedCards([]);
   };
@@ -626,13 +629,14 @@ export default function App() {
       newMultiplier *= 2;
     }
 
-    const currentPlayer = state.players[state.currentPlayerIndex];
+    const currentPlayer = state.players.find(p => p.id === state.currentPlayerIndex)!;
     const newHand = currentPlayer.hand.filter(
       (c) => !cardsToPlay.find((pc) => pc.id === c.id),
     );
 
-    const newPlayers = [...state.players];
-    newPlayers[state.currentPlayerIndex] = { ...currentPlayer, hand: newHand };
+    const newPlayers = state.players.map(p => 
+      p.id === currentPlayer.id ? { ...currentPlayer, hand: newHand } : p
+    );
 
     playSound("play");
     addLog(
@@ -711,11 +715,14 @@ export default function App() {
       return;
     }
 
-    const nextPlayerIndex =
-      (state.currentPlayerIndex + 1) % state.players.length;
+    // Find next player by array index
+    const currentPlayerArrayIndex = state.players.findIndex(p => p.id === state.currentPlayerIndex);
+    const nextPlayerArrayIndex = (currentPlayerArrayIndex + 1) % state.players.length;
+    const nextPlayerId = state.players[nextPlayerArrayIndex].id;
+    
     nextTurn(
       { ...state, multiplier: newMultiplier },
-      nextPlayerIndex,
+      nextPlayerId,
       state.deck,
       newPlayers,
       play,
@@ -729,15 +736,18 @@ export default function App() {
       return;
     }
 
-    const currentPlayer = state.players[state.currentPlayerIndex];
+    const currentPlayer = state.players.find(p => p.id === state.currentPlayerIndex)!;
     playSound("pass");
     addLog(`${currentPlayer.name} passed.`);
 
-    const nextPlayerIndex =
-      (state.currentPlayerIndex + 1) % state.players.length;
+    // Find next player by ID
+    const currentPlayerArrayIndex = state.players.findIndex(p => p.id === state.currentPlayerIndex);
+    const nextPlayerArrayIndex = (currentPlayerArrayIndex + 1) % state.players.length;
+    const nextPlayerId = state.players[nextPlayerArrayIndex].id;
+    
     nextTurn(
       state,
-      nextPlayerIndex,
+      nextPlayerId,
       state.deck,
       state.players,
       state.currentPlay,
@@ -748,8 +758,8 @@ export default function App() {
   useEffect(() => {
     if (state.status !== "playing") return;
 
-    const currentPlayer = state.players[state.currentPlayerIndex];
-    if (!currentPlayer.isAI) return;
+    const currentPlayer = state.players.find(p => p.id === state.currentPlayerIndex);
+    if (!currentPlayer || !currentPlayer.isAI) return;
     
     // In multiplayer, only the host (player 0) runs AI logic to prevent duplicate actions
     if (isMultiplayer && myPlayerId !== 0) return;
@@ -784,7 +794,7 @@ export default function App() {
   };
 
   const playSelected = () => {
-    const currentPlayer = state.players[state.currentPlayerIndex];
+    const currentPlayer = state.players.find(p => p.id === state.currentPlayerIndex)!;
     const cardsToPlay = currentPlayer.hand.filter((c) =>
       selectedCards.includes(c.id),
     );
@@ -1089,7 +1099,7 @@ export default function App() {
     );
   }
 
-  const currentPlayer = state.players[state.currentPlayerIndex];
+  const currentPlayer = state.players.find(p => p.id === state.currentPlayerIndex) || state.players[0];
   const humanPlayer = isMultiplayer 
     ? state.players.find((p) => p.id === myPlayerId)
     : state.players.find((p) => !p.isAI);
