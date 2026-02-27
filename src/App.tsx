@@ -439,9 +439,10 @@ export default function App() {
 
     const deck = createDeck();
     // Keep original seat index as player id to maintain consistency with myPlayerId
+    // Host (seat 0) gets 6 cards, others get 5 cards
     const players: Player[] = activePlayers.map((p) => ({
       ...p,
-      hand: deck.splice(0, 5), // Everyone gets 5 cards initially
+      hand: deck.splice(0, p.id === 0 ? 6 : 5),
       coins: initialCoins,
     }));
 
