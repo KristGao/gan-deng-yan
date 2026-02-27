@@ -284,6 +284,13 @@ export default function App() {
           // If there's already a host, we are participant
           if (roomData.hostId !== null && userRole === null) {
             setUserRole("participant");
+            // Auto-join first available seat for participant
+            const emptyIndex = roomData.setupPlayers?.findIndex((p: Player | null) => p === null);
+            if (emptyIndex !== -1 && emptyIndex !== undefined) {
+              setTimeout(() => {
+                joinTable(emptyIndex);
+              }, 100);
+            }
           }
         }
         if (roomData.initialCoins) {
@@ -804,17 +811,6 @@ export default function App() {
     alert(t("copied"));
   };
 
-  // Role selection handlers
-  const handleBecomeHost = () => {
-    setShowKeyInput(true);
-    setKeyError("");
-  };
-
-  const handleJoinAsParticipant = () => {
-    setUserRole("participant");
-    setShowKeyInput(false);
-  };
-
   const verifyGameKey = () => {
     if (keyInput === GAME_KEY) {
       setUserRole("host");
@@ -834,8 +830,18 @@ export default function App() {
   const isParticipant = userRole === "participant";
 
   if (state.status === "setup") {
-    // Role selection screen
-    if (!userRole) {
+    // Check if user joined via room link (participant)
+    const params = new URLSearchParams(window.location.search);
+    const hasRoomParam = params.has("room");
+    
+    // If has room param and no role set yet, auto-set as participant
+    if (hasRoomParam && !userRole && !showKeyInput) {
+      // Don't set immediately, wait for room state to check if host exists
+      // This will be handled in initSocket when room_state is received
+    }
+    
+    // Key input screen for host verification
+    if (!userRole && !hasRoomParam) {
       return (
         <div className="min-h-screen bg-yellow-400 flex flex-col items-center justify-center p-4 font-sans">
           <button
@@ -863,64 +869,30 @@ export default function App() {
             transition={{ delay: 0.2 }}
             className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md"
           >
-            {!showKeyInput ? (
-              <div className="flex flex-col gap-4">
-                <h2 className="text-2xl font-black text-zinc-800 text-center mb-4">
-                  选择你的角色
-                </h2>
-                <button
-                  onClick={handleBecomeHost}
-                  className="py-5 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-xl shadow-[0_5px_0_#e11d48] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3"
-                >
-                  <User size={28} /> {t("becomeHost")}
-                </button>
-                <p className="text-xs text-zinc-500 text-center">
-                  {t("hostControls")}
-                </p>
-                <div className="h-px bg-zinc-200 my-2" />
-                <button
-                  onClick={handleJoinAsParticipant}
-                  className="py-5 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-black text-xl shadow-[0_5px_0_#0ea5e9] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3"
-                >
-                  <Users size={28} /> {t("joinAsParticipant")}
-                </button>
-                <p className="text-xs text-zinc-500 text-center">
-                  {t("participantControls")}
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                <h2 className="text-2xl font-black text-zinc-800 text-center mb-4">
-                  {t("enterGameKey")}
-                </h2>
-                <input
-                  type="text"
-                  value={keyInput}
-                  onChange={(e) => setKeyInput(e.target.value)}
-                  placeholder={t("gameKeyPlaceholder")}
-                  className="w-full text-2xl font-black text-zinc-800 border-b-4 border-yellow-400 focus:outline-none text-center py-2"
-                />
-                {keyError && (
-                  <p className="text-rose-500 font-bold text-center">{keyError}</p>
-                )}
-                <button
-                  onClick={verifyGameKey}
-                  className="py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-lg shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all"
-                >
-                  {t("verifyKey")}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowKeyInput(false);
-                    setKeyInput("");
-                    setKeyError("");
-                  }}
-                  className="py-3 bg-zinc-300 hover:bg-zinc-400 text-zinc-700 rounded-2xl font-bold text-base transition-all"
-                >
-                  返回
-                </button>
-              </div>
-            )}
+            <div className="flex flex-col gap-4">
+              <h2 className="text-2xl font-black text-zinc-800 text-center mb-4">
+                {t("enterGameKey")}
+              </h2>
+              <p className="text-sm text-zinc-500 text-center mb-2">
+                输入密钥成为主持人，或通过分享链接加入游戏
+              </p>
+              <input
+                type="text"
+                value={keyInput}
+                onChange={(e) => setKeyInput(e.target.value)}
+                placeholder={t("gameKeyPlaceholder")}
+                className="w-full text-2xl font-black text-zinc-800 border-b-4 border-yellow-400 focus:outline-none text-center py-2"
+              />
+              {keyError && (
+                <p className="text-rose-500 font-bold text-center">{keyError}</p>
+              )}
+              <button
+                onClick={verifyGameKey}
+                className="py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-lg shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all"
+              >
+                {t("verifyKey")}
+              </button>
+            </div>
           </motion.div>
         </div>
       );
