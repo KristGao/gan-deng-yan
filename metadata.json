@@ -1,0 +1,5 @@
+{
+  "name": "Gan Deng Yan",
+  "description": "A web-based card game of Gan Deng Yan (干瞪眼) supporting up to 5 players with AI opponents.",
+  "requestFramePermissions": []
+}
