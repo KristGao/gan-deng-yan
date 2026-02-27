@@ -315,6 +315,13 @@ export default function App() {
           socket.emit("update_initial_coins", roomId, initialCoins);
         }
       });
+
+      // Handle host disconnection
+      socket.on("host_disconnected", () => {
+        alert("主持人已退出，游戏结束！");
+        // Reset to initial state
+        window.location.href = window.location.pathname;
+      });
     }
   };
 
@@ -793,6 +800,7 @@ export default function App() {
     // Broadcast host info after a short delay to ensure socket is connected
     setTimeout(() => {
       if (socket && myPlayerId !== null) {
+        socket.emit("register_host", newRoomId);
         socket.emit("update_host", newRoomId, myPlayerId);
         socket.emit("update_setup_players", newRoomId, setupPlayers);
         socket.emit("update_initial_coins", newRoomId, initialCoins);
@@ -814,6 +822,10 @@ export default function App() {
       const emptyIndex = setupPlayers.findIndex((p) => p === null);
       if (emptyIndex !== -1) {
         joinTable(emptyIndex);
+      }
+      // Register as host for disconnect detection
+      if (socket && roomId) {
+        socket.emit("register_host", roomId);
       }
     } else {
       setKeyError(t("wrongKey"));

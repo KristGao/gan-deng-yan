@@ -18,12 +18,17 @@ async function startServer() {
 
   // Simple in-memory room state
   const rooms: Record<string, any> = {};
+  // Track socket to room mapping for disconnect handling
+  const socketRooms: Record<string, string> = {};
+  // Track host socket id for each room
+  const roomHosts: Record<string, string> = {};
 
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
     socket.on("join_room", (roomId) => {
       socket.join(roomId);
+      socketRooms[socket.id] = roomId;
       if (!rooms[roomId]) {
         rooms[roomId] = {
           players: [],
@@ -36,6 +41,12 @@ async function startServer() {
       socket.emit("room_state", rooms[roomId]);
       // Broadcast to others that a new player joined
       socket.to(roomId).emit("player_joined", { socketId: socket.id });
+    });
+
+    // Host registration
+    socket.on("register_host", (roomId) => {
+      roomHosts[roomId] = socket.id;
+      console.log(`Host registered for room ${roomId}: ${socket.id}`);
     });
 
     socket.on("update_state", (roomId, state) => {
@@ -69,6 +80,20 @@ async function startServer() {
 
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
+      
+      // Check if disconnected user was a host
+      const roomId = socketRooms[socket.id];
+      if (roomId && roomHosts[roomId] === socket.id) {
+        console.log(`Host disconnected from room ${roomId}, ending game`);
+        // Broadcast to all participants that host left
+        io.to(roomId).emit("host_disconnected");
+        // Clean up room data
+        delete rooms[roomId];
+        delete roomHosts[roomId];
+      }
+      
+      // Clean up socket mapping
+      delete socketRooms[socket.id];
     });
   });
 
