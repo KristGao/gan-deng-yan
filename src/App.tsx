@@ -474,12 +474,16 @@ export default function App() {
     playSound("play");
 
     const newRolls = { ...state.diceRolls };
-    state.players.forEach(p => {
-      if (!p.isAI && (!isMultiplayer || p.id === myPlayerId)) {
-        newRolls[p.id] = Math.floor(Math.random() * 6) + 1;
-      }
-    });
-    updateState({ ...state, diceRolls: newRolls });
+    // In multiplayer, only host rolls for all human players
+    // Participants will receive the state update
+    if (!isMultiplayer || myPlayerId === 0) {
+      state.players.forEach(p => {
+        if (!p.isAI) {
+          newRolls[p.id] = Math.floor(Math.random() * 6) + 1;
+        }
+      });
+      updateState({ ...state, diceRolls: newRolls });
+    }
 
     let delay = 500;
     state.players.forEach(p => {
@@ -500,38 +504,41 @@ export default function App() {
     });
 
     setTimeout(() => {
-      setState(s => {
-        const rolls = s.players.map(p => ({ id: p.id, name: p.name, roll: s.diceRolls[p.id] || 1 }));
-        const maxRoll = Math.max(...rolls.map(r => r.roll));
-        const topRollers = rolls.filter(r => r.roll === maxRoll);
-        const starter = topRollers[Math.floor(Math.random() * topRollers.length)];
-        const starterArrayIndex = s.players.findIndex(p => p.id === starter.id);
-        const starterPlayerId = starter.id;
+      // Only host processes the dice results and syncs to others
+      if (!isMultiplayer || myPlayerId === 0) {
+        setState(s => {
+          const rolls = s.players.map(p => ({ id: p.id, name: p.name, roll: s.diceRolls[p.id] || 1 }));
+          const maxRoll = Math.max(...rolls.map(r => r.roll));
+          const topRollers = rolls.filter(r => r.roll === maxRoll);
+          const starter = topRollers[Math.floor(Math.random() * topRollers.length)];
+          const starterArrayIndex = s.players.findIndex(p => p.id === starter.id);
+          const starterPlayerId = starter.id;
 
-        // Give the starter an extra card
-        const newPlayers = [...s.players];
-        const newDeck = [...s.deck];
-        if (newDeck.length > 0) {
-          newPlayers[starterArrayIndex] = {
-            ...newPlayers[starterArrayIndex],
-            hand: [...newPlayers[starterArrayIndex].hand, newDeck.pop()!].sort((a, b) => a.rank - b.rank)
+          // Give the starter an extra card
+          const newPlayers = [...s.players];
+          const newDeck = [...s.deck];
+          if (newDeck.length > 0) {
+            newPlayers[starterArrayIndex] = {
+              ...newPlayers[starterArrayIndex],
+              hand: [...newPlayers[starterArrayIndex].hand, newDeck.pop()!].sort((a, b) => a.rank - b.rank)
+            };
+          }
+
+          const nextState: GameState = {
+            ...s,
+            players: newPlayers,
+            deck: newDeck,
+            status: "playing",
+            currentPlayerIndex: starterPlayerId,
+            logs: [
+              t("logDiceRolls", rolls.map(r => `${r.name}(${r.roll})`).join(", ")),
+              t("logGoesFirst", starter.name)
+            ]
           };
-        }
-
-        const nextState: GameState = {
-          ...s,
-          players: newPlayers,
-          deck: newDeck,
-          status: "playing",
-          currentPlayerIndex: starterPlayerId,
-          logs: [
-            t("logDiceRolls", rolls.map(r => `${r.name}(${r.roll})`).join(", ")),
-            t("logGoesFirst", starter.name)
-          ]
-        };
-        if (isMultiplayer && socket) socket.emit("update_state", roomId, nextState);
-        return nextState;
-      });
+          if (isMultiplayer && socket) socket.emit("update_state", roomId, nextState);
+          return nextState;
+        });
+      }
       setIsRolling(false);
     }, delay + 1500);
   };
