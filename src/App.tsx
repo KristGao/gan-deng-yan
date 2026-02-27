@@ -202,8 +202,16 @@ export default function App() {
   ]);
   const [userName, setUserName] = useState("Soyeon");
   const [userAvatar, setUserAvatar] = useState(IDLE_AVATARS[0]);
-  const [initialCoins, setInitialCoins] = useState(100);
+  const [initialCoins, setInitialCoinsState] = useState(100);
   const [showChat, setShowChat] = useState(false);
+  
+  // Wrapper for setInitialCoins that syncs in multiplayer
+  const setInitialCoins = (coins: number) => {
+    setInitialCoinsState(coins);
+    if (isMultiplayer && socket && roomId) {
+      socket.emit("update_initial_coins", roomId, coins);
+    }
+  };
   const [chatInput, setChatInput] = useState("");
   const [bubbles, setBubbles] = useState<Record<number, string>>({});
   const [isRolling, setIsRolling] = useState(false);
@@ -267,6 +275,43 @@ export default function App() {
       socket.on("room_state", (roomData: any) => {
         if (roomData.state) {
           setState(roomData.state);
+        }
+        // Sync setup phase data
+        if (roomData.setupPlayers) {
+          setSetupPlayers(roomData.setupPlayers);
+        }
+        if (roomData.hostId !== undefined) {
+          // If there's already a host, we are participant
+          if (roomData.hostId !== null && userRole === null) {
+            setUserRole("participant");
+          }
+        }
+        if (roomData.initialCoins) {
+          setInitialCoinsState(roomData.initialCoins);
+        }
+      });
+
+      // Setup phase synchronization
+      socket.on("setup_players_updated", (newSetupPlayers: (Player | null)[]) => {
+        setSetupPlayers(newSetupPlayers);
+      });
+
+      socket.on("host_updated", (hostId: number | null) => {
+        if (hostId !== null && userRole === null) {
+          setUserRole("participant");
+        }
+      });
+
+      socket.on("initial_coins_updated", (coins: number) => {
+        setInitialCoinsState(coins);
+      });
+
+      socket.on("player_joined", () => {
+        // When a new player joins, broadcast our setup state if we're the host
+        if (isHost && socket) {
+          socket.emit("update_setup_players", roomId, setupPlayers);
+          socket.emit("update_host", roomId, myPlayerId);
+          socket.emit("update_initial_coins", roomId, initialCoins);
         }
       });
     }
@@ -350,8 +395,10 @@ export default function App() {
     }
     setSetupPlayers(newSetup);
     
-    // In multiplayer, we'd sync setup state here, but for simplicity
-    // we'll just sync the full game state once started.
+    // Sync setup state in multiplayer
+    if (isMultiplayer && socket) {
+      socket.emit("update_setup_players", roomId, newSetup);
+    }
   };
 
   const addAI = () => {
@@ -368,6 +415,11 @@ export default function App() {
       coins: initialCoins,
     };
     setSetupPlayers(newSetup);
+    
+    // Sync setup state in multiplayer
+    if (isMultiplayer && socket) {
+      socket.emit("update_setup_players", roomId, newSetup);
+    }
   };
 
   const startGame = () => {
@@ -736,6 +788,15 @@ export default function App() {
     const url = new URL(window.location.href);
     url.searchParams.set("room", newRoomId);
     window.history.pushState({}, "", url);
+    
+    // Broadcast host info after a short delay to ensure socket is connected
+    setTimeout(() => {
+      if (socket && myPlayerId !== null) {
+        socket.emit("update_host", newRoomId, myPlayerId);
+        socket.emit("update_setup_players", newRoomId, setupPlayers);
+        socket.emit("update_initial_coins", newRoomId, initialCoins);
+      }
+    }, 500);
   };
 
   const copyInviteLink = () => {
