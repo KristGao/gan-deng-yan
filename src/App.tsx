@@ -284,13 +284,7 @@ export default function App() {
           // If there's already a host, we are participant
           if (roomData.hostId !== null && userRole === null) {
             setUserRole("participant");
-            // Auto-join first available seat for participant
-            const emptyIndex = roomData.setupPlayers?.findIndex((p: Player | null) => p === null);
-            if (emptyIndex !== -1 && emptyIndex !== undefined) {
-              setTimeout(() => {
-                joinTable(emptyIndex);
-              }, 100);
-            }
+            // Participant needs to manually choose a seat
           }
         }
         if (roomData.initialCoins) {
