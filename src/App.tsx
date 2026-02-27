@@ -473,9 +473,9 @@ export default function App() {
     setIsRolling(true);
     playSound("play");
 
+    // Each human player rolls their own dice
     const newRolls = { ...state.diceRolls };
     
-    // Each human player rolls their own dice
     if (isMultiplayer) {
       // In multiplayer, only roll for yourself
       if (myPlayerId !== null) {
@@ -489,33 +489,17 @@ export default function App() {
         }
       });
     }
-    updateState({ ...state, diceRolls: newRolls });
-
-    // Roll for AI players with delay
-    let delay = 500;
-    state.players.forEach(p => {
-      if (p.isAI) {
-        setTimeout(() => {
-          playSound("play");
-          setState(s => {
-            const nextState = {
-              ...s,
-              diceRolls: { ...s.diceRolls, [p.id]: Math.floor(Math.random() * 6) + 1 }
-            };
-            if (isMultiplayer && socket) socket.emit("update_state", roomId, nextState);
-            return nextState;
-          });
-        }, delay);
-        delay += 500;
-      }
-    });
-
-    // For single player, process results after AI rolls
-    if (!isMultiplayer) {
-      setTimeout(() => {
-        setIsRolling(false);
-      }, delay + 500);
+    
+    // AI players roll (only host handles AI in multiplayer)
+    if (!isMultiplayer || myPlayerId === 0) {
+      state.players.forEach(p => {
+        if (p.isAI) {
+          newRolls[p.id] = Math.floor(Math.random() * 6) + 1;
+        }
+      });
     }
+    
+    updateState({ ...state, diceRolls: newRolls });
   };
 
   // Effect to check if all players have rolled and process results (host only)
@@ -527,7 +511,10 @@ export default function App() {
       p.isAI || (state.diceRolls[p.id] !== null && state.diceRolls[p.id] !== undefined)
     );
     
-    if (allRolled && !isRolling) {
+    if (allRolled) {
+      // Reset rolling state
+      setIsRolling(false);
+      
       // All have rolled, process results
       const rolls = state.players.map(p => ({ id: p.id, name: p.name, roll: state.diceRolls[p.id] || 1 }));
       const maxRoll = Math.max(...rolls.map(r => r.roll));
