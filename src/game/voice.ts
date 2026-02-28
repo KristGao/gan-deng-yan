@@ -1,5 +1,5 @@
 // Voice synthesis for card playing and game actions
-// Uses Edge TTS for more natural sounding voices
+// Uses Web Speech API with improved settings for more natural voice
 
 export type Gender = "male" | "female";
 
@@ -42,101 +42,132 @@ export const getCardVoiceName = (cardLabel: string): string => {
   return suitName + rankName;
 };
 
-// Audio cache to prevent reloading
-const audioCache: Map<string, HTMLAudioElement> = new Map();
+// Available voices cache
+let maleVoice: SpeechSynthesisVoice | null = null;
+let femaleVoice: SpeechSynthesisVoice | null = null;
+let voicesLoaded = false;
 
-// Create audio element with caching
-const getAudio = (url: string): HTMLAudioElement => {
-  if (!audioCache.has(url)) {
-    const audio = new Audio(url);
-    audioCache.set(url, audio);
+// Initialize and cache voices
+export const initVoices = () => {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    console.warn("Speech synthesis not supported");
+    return;
   }
-  return audioCache.get(url)!;
-};
 
-// Generate TTS URL using Edge TTS service
-const generateTTSUrl = (text: string, gender: Gender): string => {
-  // Use Edge TTS demo service
-  // Male voice: zh-CN-YunxiNeural (male, natural)
-  // Female voice: zh-CN-XiaoxiaoNeural (female, natural)
-  const voice = gender === "male" 
-    ? "zh-CN-YunxiNeural" 
-    : "zh-CN-XiaoxiaoNeural";
+  const loadVoices = () => {
+    const voices = window.speechSynthesis.getVoices();
+    
+    // Find Chinese voices
+    const chineseVoices = voices.filter(
+      (v) => v.lang.includes("zh") || v.lang.includes("CN") || v.lang.includes("HK") || v.lang.includes("TW")
+    );
+
+    if (chineseVoices.length > 0) {
+      // Prefer Microsoft or Google voices for better quality
+      maleVoice = chineseVoices.find(v => 
+        v.name.includes("Yunxi") || v.name.includes("Kangkang") || v.name.includes("Male")
+      ) || chineseVoices[0];
+      
+      femaleVoice = chineseVoices.find(v => 
+        v.name.includes("Xiaoxiao") || v.name.includes("Yaoyao") || v.name.includes("Huihui") || v.name.includes("Female")
+      ) || chineseVoices[0];
+      
+      voicesLoaded = true;
+      console.log("Voices loaded:", { male: maleVoice?.name, female: femaleVoice?.name });
+    }
+  };
+
+  // Load voices immediately if available
+  loadVoices();
   
-  // Using a free TTS API service
-  const encodedText = encodeURIComponent(text);
-  return `https://api.tts.quest/v1/edge-tts?text=${encodedText}&voice=${voice}`;
+  // Also listen for voices changed event
+  window.speechSynthesis.onvoiceschanged = loadVoices;
 };
 
-// Alternative: Use Google Translate TTS (limited but reliable)
-const generateGoogleTTSUrl = (text: string): string => {
-  const encodedText = encodeURIComponent(text);
-  return `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=zh-CN&client=tw-ob`;
+// Get voice based on gender
+const getVoice = (gender: Gender): SpeechSynthesisVoice | null => {
+  return gender === "male" ? maleVoice : femaleVoice;
 };
 
-// Play audio with fallback
-const playAudio = async (url: string): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const audio = getAudio(url);
-    audio.currentTime = 0;
+// Queue for sequential speech
+let speechQueue: Promise<void> = Promise.resolve();
+
+// Speak text with improved settings
+const speak = (text: string, gender: Gender = "male") => {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "zh-CN";
+  utterance.rate = 1.1; // Slightly faster for more natural feel
+  utterance.pitch = gender === "female" ? 1.15 : 0.95; // More distinct gender difference
+  utterance.volume = 1.0;
+
+  // Set voice if available
+  const voice = getVoice(gender);
+  if (voice) {
+    utterance.voice = voice;
+  }
+
+  // Queue the speech
+  const speakPromise = new Promise<void>((resolve) => {
+    utterance.onend = () => resolve();
+    utterance.onerror = () => resolve(); // Resolve even on error to continue queue
     
-    audio.onended = () => resolve();
-    audio.onerror = () => reject(new Error("Audio playback failed"));
-    
-    // Try to play
-    audio.play().catch((err) => {
-      console.warn("Audio play failed:", err);
-      reject(err);
-    });
+    // Some browsers need a small delay between speeches
+    setTimeout(() => {
+      window.speechSynthesis.speak(utterance);
+    }, 50);
   });
+
+  speechQueue = speechQueue.then(() => speakPromise);
 };
 
-// Queue for sequential audio playback
-let audioQueue: Promise<void> = Promise.resolve();
-
-// Queue audio playback
-const queueAudio = (url: string): void => {
-  audioQueue = audioQueue.then(() => playAudio(url)).catch(() => {});
-};
-
-// Play voice for playing cards using real TTS
+// Play voice for playing cards
 export const playCardVoice = (cardLabels: string[], gender: Gender = "male") => {
-  const cardNames = cardLabels.map(getCardVoiceName).join("，");
+  // Ensure voices are loaded
+  if (!voicesLoaded) {
+    initVoices();
+  }
   
-  // Use Google TTS for more reliable playback
-  const url = generateGoogleTTSUrl(cardNames);
-  queueAudio(url);
+  const cardNames = cardLabels.map(getCardVoiceName).join("，");
+  speak(cardNames, gender);
 };
 
 // Play "pass" voice (要不起)
 export const playPassVoice = (gender: Gender = "male") => {
+  if (!voicesLoaded) {
+    initVoices();
+  }
+  
   const passPhrases = ["要不起", "不要", "过"];
   const randomPhrase = passPhrases[Math.floor(Math.random() * passPhrases.length)];
-  
-  const url = generateGoogleTTSUrl(randomPhrase);
-  queueAudio(url);
+  speak(randomPhrase, gender);
 };
 
 // Play bomb voice
 export const playBombVoice = (gender: Gender = "male") => {
-  const url = generateGoogleTTSUrl("炸弹！");
-  queueAudio(url);
+  if (!voicesLoaded) {
+    initVoices();
+  }
+  
+  speak("炸弹！", gender);
 };
 
 // Play win voice
 export const playWinVoice = (playerName: string, gender: Gender = "male") => {
-  const url = generateGoogleTTSUrl(`${playerName}赢了！`);
-  queueAudio(url);
+  if (!voicesLoaded) {
+    initVoices();
+  }
+  
+  speak(`${playerName}赢了！`, gender);
 };
 
-// Initialize voices (pre-load if needed)
-export const initVoices = () => {
-  // Pre-load common sounds if needed
-  console.log("Voice system initialized");
-};
-
-// Clear audio cache
-export const clearAudioCache = () => {
-  audioCache.clear();
-  audioQueue = Promise.resolve();
+// Clear speech queue
+export const clearSpeechQueue = () => {
+  if (typeof window !== "undefined" && "speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+  speechQueue = Promise.resolve();
 };
