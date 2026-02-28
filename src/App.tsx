@@ -1012,27 +1012,27 @@ export default function App() {
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="w-full max-w-lg"
+            className="w-full max-w-2xl"
           >
-            <h2 className="text-3xl font-black text-white drop-shadow-[0_3px_0_rgba(0,0,0,0.2)] text-center mb-8">
+            <h2 className="text-3xl font-black text-white drop-shadow-[0_3px_0_rgba(0,0,0,0.2)] text-center mb-12">
               {t("selectRole")}
             </h2>
 
-            <div className="flex flex-col gap-4">
-              {/* Host Option */}
+            <div className="flex justify-center items-center gap-12">
+              {/* Host Option - Circle */}
               <button
                 onClick={() => setShowHostKeyInput(true)}
-                className="w-full py-6 bg-white hover:bg-rose-50 rounded-2xl font-black text-xl shadow-lg border-l-8 border-rose-500 transition-all text-left px-8"
+                className="w-40 h-40 bg-rose-500 hover:bg-rose-600 rounded-full font-black text-xl text-white shadow-xl transition-all flex flex-col items-center justify-center gap-2"
               >
-                <span className="text-rose-500">{t("iAmHost")}</span>
+                <span>主持人</span>
               </button>
 
-              {/* Participant Option */}
+              {/* Participant Option - Circle */}
               <button
                 onClick={() => setShowRoomInput("participant")}
-                className="w-full py-6 bg-white hover:bg-sky-50 rounded-2xl font-black text-xl shadow-lg border-l-8 border-sky-500 transition-all text-left px-8"
+                className="w-40 h-40 bg-sky-500 hover:bg-sky-600 rounded-full font-black text-xl text-white shadow-xl transition-all flex flex-col items-center justify-center gap-2"
               >
-                <span className="text-sky-500">{t("iAmParticipant")}</span>
+                <span>参与者</span>
               </button>
             </div>
           </motion.div>
