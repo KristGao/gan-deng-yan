@@ -1012,35 +1012,109 @@ export default function App() {
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-2xl"
+            className="w-full max-w-4xl"
           >
-            <h2 className="text-2xl font-black text-zinc-800 text-center mb-8">
-              {t("selectRole")}
-            </h2>
-            <div className="flex flex-col md:flex-row gap-6">
-              {/* Host Option */}
-              <button
+            {/* Title with eggy style */}
+            <div className="text-center mb-10">
+              <h2 className="text-4xl font-black text-white drop-shadow-[0_4px_0_rgba(0,0,0,0.2)] mb-2">
+                {t("selectRole")}
+              </h2>
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-2xl">🥚</span>
+                <span className="text-yellow-800 font-bold">选择一个身份开始游戏</span>
+                <span className="text-2xl">🥚</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-8 justify-center items-stretch">
+              {/* Host Option - Eggy Style */}
+              <motion.button
+                whileHover={{ scale: 1.02, y: -5 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setShowHostKeyInput(true)}
-                className="flex-1 py-8 bg-gradient-to-br from-rose-400 to-rose-600 hover:from-rose-500 hover:to-rose-700 text-white rounded-3xl font-black text-xl shadow-[0_8px_0_#e11d48] active:translate-y-2 active:shadow-none transition-all flex flex-col items-center gap-4"
+                className="flex-1 max-w-sm bg-white rounded-[2.5rem] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.15)] border-4 border-rose-200 hover:border-rose-400 transition-all group"
               >
-                <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center text-5xl">
-                  👑
+                {/* Character Avatar */}
+                <div className="relative mb-4">
+                  <div className="w-32 h-32 mx-auto bg-gradient-to-br from-rose-300 to-rose-500 rounded-full flex items-center justify-center shadow-inner border-4 border-white">
+                    <span className="text-6xl">🎪</span>
+                  </div>
+                  {/* Crown badge */}
+                  <div className="absolute -top-2 -right-2 w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                    <span className="text-2xl">👑</span>
+                  </div>
                 </div>
-                <span>{t("iAmHost")}</span>
-                <span className="text-sm font-normal opacity-80">{t("hostControls")}</span>
-              </button>
-              
-              {/* Participant Option */}
-              <button
+
+                {/* Content */}
+                <div className="text-center">
+                  <h3 className="text-2xl font-black text-rose-500 mb-2">
+                    {t("iAmHost")}
+                  </h3>
+                  <div className="bg-rose-50 rounded-2xl p-3 mb-4">
+                    <p className="text-rose-600 text-sm font-bold">
+                      🎯 创建房间<br/>
+                      💰 设置金币<br/>
+                      🤖 添加机器人
+                    </p>
+                  </div>
+                  <div className="inline-flex items-center gap-2 bg-rose-500 text-white px-6 py-3 rounded-full font-black text-lg shadow-[0_4px_0_#e11d48] group-active:shadow-none group-active:translate-y-1 transition-all">
+                    选择
+                    <span className="text-xl">→</span>
+                  </div>
+                </div>
+              </motion.button>
+
+              {/* VS Badge */}
+              <div className="flex items-center justify-center">
+                <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg border-4 border-white rotate-12">
+                  <span className="text-xl font-black text-yellow-800">VS</span>
+                </div>
+              </div>
+
+              {/* Participant Option - Eggy Style */}
+              <motion.button
+                whileHover={{ scale: 1.02, y: -5 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setShowRoomInput("participant")}
-                className="flex-1 py-8 bg-gradient-to-br from-sky-400 to-sky-600 hover:from-sky-500 hover:to-sky-700 text-white rounded-3xl font-black text-xl shadow-[0_8px_0_#0284c7] active:translate-y-2 active:shadow-none transition-all flex flex-col items-center gap-4"
+                className="flex-1 max-w-sm bg-white rounded-[2.5rem] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.15)] border-4 border-sky-200 hover:border-sky-400 transition-all group"
               >
-                <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center text-5xl">
-                  🎮
+                {/* Character Avatar */}
+                <div className="relative mb-4">
+                  <div className="w-32 h-32 mx-auto bg-gradient-to-br from-sky-300 to-sky-500 rounded-full flex items-center justify-center shadow-inner border-4 border-white">
+                    <span className="text-6xl">🎮</span>
+                  </div>
+                  {/* Game badge */}
+                  <div className="absolute -top-2 -right-2 w-12 h-12 bg-green-400 rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+                    <span className="text-2xl">⭐</span>
+                  </div>
                 </div>
-                <span>{t("iAmParticipant")}</span>
-                <span className="text-sm font-normal opacity-80">{t("participantControls")}</span>
-              </button>
+
+                {/* Content */}
+                <div className="text-center">
+                  <h3 className="text-2xl font-black text-sky-500 mb-2">
+                    {t("iAmParticipant")}
+                  </h3>
+                  <div className="bg-sky-50 rounded-2xl p-3 mb-4">
+                    <p className="text-sky-600 text-sm font-bold">
+                      🪑 选择座位<br/>
+                      ✏️ 修改昵称<br/>
+                      🎲 开始游戏
+                    </p>
+                  </div>
+                  <div className="inline-flex items-center gap-2 bg-sky-500 text-white px-6 py-3 rounded-full font-black text-lg shadow-[0_4px_0_#0284c7] group-active:shadow-none group-active:translate-y-1 transition-all">
+                    选择
+                    <span className="text-xl">→</span>
+                  </div>
+                </div>
+              </motion.button>
+            </div>
+
+            {/* Decorative elements */}
+            <div className="flex justify-center gap-4 mt-8">
+              <span className="text-3xl animate-bounce" style={{ animationDelay: '0s' }}>🎲</span>
+              <span className="text-3xl animate-bounce" style={{ animationDelay: '0.2s' }}>🃏</span>
+              <span className="text-3xl animate-bounce" style={{ animationDelay: '0.4s' }}>🎯</span>
+              <span className="text-3xl animate-bounce" style={{ animationDelay: '0.6s' }}>🏆</span>
             </div>
           </motion.div>
         </div>
