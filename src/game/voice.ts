@@ -4,11 +4,8 @@
 export type Gender = "male" | "female";
 
 // Card name mapping for Chinese
+// Label format: "3", "4", ..., "10", "J", "Q", "K", "A", "2", "BJ", "RJ"
 const CARD_NAMES: Record<string, string> = {
-  "♠": "黑桃",
-  "♥": "红桃",
-  "♣": "梅花",
-  "♦": "方块",
   "3": "三",
   "4": "四",
   "5": "五",
@@ -22,11 +19,12 @@ const CARD_NAMES: Record<string, string> = {
   "K": "凯",
   "A": "尖",
   "2": "二",
-  "joker": "小王",
-  "JOKER": "大王",
+  "BJ": "小王",
+  "RJ": "大王",
 };
 
-const RANK_NUMBERS: Record<string, string> = {
+// Rank mapping for poker terms (pairs, straights, etc.)
+const RANK_NAMES: Record<string, string> = {
   "3": "三",
   "4": "四",
   "5": "五",
@@ -42,49 +40,47 @@ const RANK_NUMBERS: Record<string, string> = {
   "2": "二",
 };
 
-const getRank = (cardLabel: string): string => {
-  if (cardLabel === "JOKER") return "大王";
-  if (cardLabel === "joker") return "小王";
-  return cardLabel.slice(1);
+// Get Chinese name for a single card
+export const getCardVoiceName = (label: string): string => {
+  return CARD_NAMES[label] || label;
 };
 
-export const getCardVoiceName = (cardLabel: string): string => {
-  if (cardLabel === "JOKER") return "大王";
-  if (cardLabel === "joker") return "小王";
-  const suit = cardLabel.slice(0, 1);
-  const rank = cardLabel.slice(1);
-  const suitName = CARD_NAMES[suit] || "";
-  const rankName = CARD_NAMES[rank] || rank;
-  return suitName + rankName;
-};
-
+// Analyze cards and return poker voice text
 const analyzeCardsForVoice = (cardLabels: string[]): string => {
   const count = cardLabels.length;
-  const hasSmallJoker = cardLabels.includes("joker");
-  const hasBigJoker = cardLabels.includes("JOKER");
+  
+  // Handle jokers - check for both BJ and RJ
+  const hasSmallJoker = cardLabels.includes("BJ");
+  const hasBigJoker = cardLabels.includes("RJ");
   
   if (hasSmallJoker && hasBigJoker) {
     return "王炸！";
   }
   
-  const normalCards = cardLabels.filter(c => c !== "joker" && c !== "JOKER");
-  const ranks = normalCards.map(getRank);
-  const uniqueRanks = [...new Set(ranks)];
+  // Get ranks (excluding jokers for analysis)
+  const normalCards = cardLabels.filter(c => c !== "BJ" && c !== "RJ");
+  const uniqueRanks = [...new Set(normalCards)];
   
+  // Check if all same rank (pair, three, four of a kind)
   if (uniqueRanks.length === 1 && normalCards.length > 0) {
     const rank = uniqueRanks[0];
-    const rankName = RANK_NUMBERS[rank] || rank;
+    const rankName = RANK_NAMES[rank] || rank;
+    
     if (count === 2) return `对${rankName}`;
     if (count === 3) return `三个${rankName}`;
     if (count === 4) return `炸弹！${rankName}炸弹！`;
   }
   
+  // Check for straight (all consecutive ranks)
   if (count >= 3 && uniqueRanks.length === count) {
     const rankValues: Record<string, number> = {
       "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10,
       "J": 11, "Q": 12, "K": 13, "A": 14
     };
-    const values = ranks.map(r => rankValues[r] || 0).filter(v => v > 0).sort((a, b) => a - b);
+    
+    const values = normalCards.map(r => rankValues[r] || 0).filter(v => v > 0).sort((a, b) => a - b);
+    
+    // Check if consecutive
     let isConsecutive = true;
     for (let i = 1; i < values.length; i++) {
       if (values[i] - values[i-1] !== 1) {
@@ -92,47 +88,39 @@ const analyzeCardsForVoice = (cardLabels: string[]): string => {
         break;
       }
     }
+    
     if (isConsecutive && values.length === count) {
-      const startRank = RANK_NUMBERS[ranks.find(r => rankValues[r] === values[0])!] || "";
-      const endRank = RANK_NUMBERS[ranks.find(r => rankValues[r] === values[values.length - 1])!] || "";
+      const startRank = RANK_NAMES[normalCards.find(r => rankValues[r] === values[0])!] || "";
+      const endRank = RANK_NAMES[normalCards.find(r => rankValues[r] === values[values.length - 1])!] || "";
+      
       if (count === 3) return `${startRank}${endRank}顺子`;
       return `${startRank}到${endRank}顺子`;
     }
   }
   
+  // Default: read each card individually
   return cardLabels.map(getCardVoiceName).join("，");
 };
 
-// Audio context for playing TTS audio
-let audioContext: AudioContext | null = null;
-
-// Get or create audio context
-const getAudioContext = (): AudioContext => {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  }
-  return audioContext;
-};
-
-// Play audio from base64 or URL
-const playAudioFromUrl = async (url: string): Promise<void> => {
+// Play audio from URL
+const playAudioFromUrl = async (url: string): Promise<boolean> => {
   try {
     const audio = new Audio(url);
     audio.volume = 1.0;
     await audio.play();
+    return true;
   } catch (e) {
     console.warn("Audio playback failed:", e);
+    return false;
   }
 };
 
-// Use Baidu TTS (free, no API key needed for basic usage)
+// Use Baidu TTS (free, no API key needed)
 const speakWithBaiduTTS = async (text: string, gender: Gender): Promise<boolean> => {
   try {
-    // Baidu TTS parameters
-    const per = gender === "female" ? "0" : "1"; // 0=female, 1=male
+    const per = gender === "female" ? "0" : "1";
     const url = `https://tts.baidu.com/text2audio?tex=${encodeURIComponent(text)}&cuid=baike&lan=zh&ctp=1&pdt=301&vol=9&rate=32&per=${per}`;
-    await playAudioFromUrl(url);
-    return true;
+    return await playAudioFromUrl(url);
   } catch (e) {
     console.warn("Baidu TTS failed:", e);
     return false;
@@ -196,11 +184,11 @@ export const initVoices = () => {
   setTimeout(loadVoices, 500);
 };
 
-// Main speak function - tries Baidu TTS first, falls back to Web Speech
+// Main speak function
 const speak = async (text: string, gender: Gender = "male") => {
   console.log(`Speaking: "${text}" (${gender})`);
   
-  // Try Baidu TTS first (better quality)
+  // Try Baidu TTS first
   const success = await speakWithBaiduTTS(text, gender);
   
   // Fallback to Web Speech API
