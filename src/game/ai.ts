@@ -73,26 +73,25 @@ export const getValidPlays = (
       if (possible) addIfValid(selectedCards);
     }
   } else if (!currentPlay) {
-    // Try all possible straights of length 3 to 12
-    for (let len = 3; len <= 12; len++) {
-      for (let startRank = 3; startRank <= 15 - len; startRank++) {
-        const targetRanks = Array.from({ length: len }, (_, i) => startRank + i);
-        const selectedCards: Card[] = [];
-        let tempJokers = [...jokers];
-        let possible = true;
-        for (const tr of targetRanks) {
-          const found = normal.find((n) => n.rank === tr);
-          if (found) {
-            selectedCards.push(found);
-          } else if (tempJokers.length > 0) {
-            selectedCards.push(tempJokers.pop()!);
-          } else {
-            possible = false;
-            break;
-          }
+    // Try all possible straights of length 3 only
+    const len = 3;
+    for (let startRank = 3; startRank <= 15 - len; startRank++) {
+      const targetRanks = Array.from({ length: len }, (_, i) => startRank + i);
+      const selectedCards: Card[] = [];
+      let tempJokers = [...jokers];
+      let possible = true;
+      for (const tr of targetRanks) {
+        const found = normal.find((n) => n.rank === tr);
+        if (found) {
+          selectedCards.push(found);
+        } else if (tempJokers.length > 0) {
+          selectedCards.push(tempJokers.pop()!);
+        } else {
+          possible = false;
+          break;
         }
-        if (possible) addIfValid(selectedCards);
       }
+      if (possible) addIfValid(selectedCards);
     }
   }
 
