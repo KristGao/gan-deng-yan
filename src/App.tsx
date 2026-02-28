@@ -1675,6 +1675,7 @@ export default function App() {
                   <div className="text-2xl font-black text-zinc-800">
                     {viewingPlayer.name}
                   </div>
+                  {currentPlayer.id === viewingPlayer.id && <span className="text-amber-500 text-lg">👑</span>}
                   <div className="text-sm font-bold text-sky-500 flex items-center gap-3">
                     <span>{viewingPlayer.hand.length} {t("cardsLeft")}</span>
                     <span className="flex items-center gap-1 text-yellow-500 bg-yellow-50 px-2 py-1 rounded-lg">
