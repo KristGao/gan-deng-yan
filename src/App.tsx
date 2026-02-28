@@ -1420,7 +1420,7 @@ export default function App() {
                     </div>
                   )}
                   <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-yellow-400 text-white px-2 py-0.5 rounded-full shadow-md text-[10px] font-black whitespace-nowrap flex items-center gap-1">
-                    🪙 {p.coins}
+                    💰 {p.coins}
                   </div>
                   <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md text-[10px] font-black whitespace-nowrap flex items-center gap-1">
                     <span>{p.name}</span>
@@ -1516,7 +1516,7 @@ export default function App() {
                         <span className={r.coinsChange > 0 ? "text-emerald-500" : r.coinsChange < 0 ? "text-rose-500" : "text-zinc-400"}>
                           {r.coinsChange > 0 ? "+" : ""}{r.coinsChange}
                         </span>
-                        <span className="text-yellow-500 w-12 text-right">🪙 {r.coinsTotal}</span>
+                        <span className="text-yellow-500 w-12 text-right">💰 {r.coinsTotal}</span>
                       </div>
                     </div>
                   ))}
@@ -1677,7 +1677,7 @@ export default function App() {
                   <div className="text-sm font-bold text-sky-500 flex items-center gap-3">
                     <span>{viewingPlayer.hand.length} {t("cardsLeft")}</span>
                     <span className="flex items-center gap-1 text-yellow-500 bg-yellow-50 px-2 py-1 rounded-lg">
-                      🪙 {viewingPlayer.coins}
+                      💰 {viewingPlayer.coins}
                     </span>
                   </div>
                 </div>
