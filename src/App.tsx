@@ -415,10 +415,17 @@ export default function App() {
 
   const joinTable = (index: number) => {
     const newSetup = [...setupPlayers];
-    if (newSetup[index]) {
+    
+    // If clicking the same seat, leave it
+    if (newSetup[index] && myPlayerId === index) {
       newSetup[index] = null;
-      if (myPlayerId === index) setMyPlayerId(null);
+      setMyPlayerId(null);
     } else {
+      // Clear previous seat if any
+      if (myPlayerId !== null && myPlayerId !== index) {
+        newSetup[myPlayerId] = null;
+      }
+      // Take new seat
       newSetup[index] = {
         id: index,
         name: userName,
