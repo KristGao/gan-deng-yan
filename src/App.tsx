@@ -1424,6 +1424,7 @@ export default function App() {
                   </div>
                   <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md text-[10px] font-black whitespace-nowrap flex items-center gap-1">
                     <span>{p.name}</span>
+                    {state.winner === p.id && <span className="text-amber-500">👑</span>}
                     <span className="text-sky-500">({p.hand.length})</span>
                   </div>
 
