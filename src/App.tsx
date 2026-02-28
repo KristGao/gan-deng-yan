@@ -86,6 +86,8 @@ const IDLE_AVATARS = [
   "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop", // Shuhua style
 ];
 
+const BOT_AVATAR = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop"; // Robot style
+
 const MEMBER_NAMES = ["Soyeon", "Miyeon", "Minnie", "Yuqi", "Shuhua"];
 
 const TRANSLATIONS = {
@@ -222,7 +224,7 @@ export default function App() {
     null,
     null,
   ]);
-  const [userName, setUserName] = useState("Soyeon");
+  const [userName, setUserName] = useState("主持人");
   const [userAvatar, setUserAvatar] = useState(IDLE_AVATARS[0]);
   const [initialCoins, setInitialCoinsState] = useState(100);
   const [showChat, setShowChat] = useState(false);
@@ -439,13 +441,14 @@ export default function App() {
     const emptyIndex = setupPlayers.findIndex((p) => p === null);
     if (emptyIndex === -1) return;
     const newSetup = [...setupPlayers];
-    const aiName = MEMBER_NAMES[emptyIndex] || `Bot ${emptyIndex + 1}`;
+    const botCount = setupPlayers.filter(p => p?.isAI).length + 1;
+    const aiName = `Bot ${botCount}`;
     newSetup[emptyIndex] = {
       id: emptyIndex,
       name: aiName,
       isAI: true,
       hand: [],
-      avatar: IDLE_AVATARS[emptyIndex % IDLE_AVATARS.length],
+      avatar: BOT_AVATAR,
       coins: initialCoins,
     };
     setSetupPlayers(newSetup);
