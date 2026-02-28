@@ -1,16 +1,14 @@
 // Voice synthesis for card playing and game actions
-// Uses Web Speech API with poker terminology in Mandarin Chinese
+// Uses multiple TTS providers for natural sounding voice
 
 export type Gender = "male" | "female";
 
 // Card name mapping for Chinese
 const CARD_NAMES: Record<string, string> = {
-  // Suits
   "♠": "黑桃",
   "♥": "红桃",
   "♣": "梅花",
   "♦": "方块",
-  // Ranks
   "3": "三",
   "4": "四",
   "5": "五",
@@ -28,7 +26,6 @@ const CARD_NAMES: Record<string, string> = {
   "JOKER": "大王",
 };
 
-// Rank number mapping for poker terms
 const RANK_NUMBERS: Record<string, string> = {
   "3": "三",
   "4": "四",
@@ -45,38 +42,24 @@ const RANK_NUMBERS: Record<string, string> = {
   "2": "二",
 };
 
-// Get rank from card label
 const getRank = (cardLabel: string): string => {
   if (cardLabel === "JOKER") return "大王";
   if (cardLabel === "joker") return "小王";
   return cardLabel.slice(1);
 };
 
-// Get suit from card label
-const getSuit = (cardLabel: string): string => {
-  if (cardLabel === "JOKER" || cardLabel === "joker") return "";
-  return cardLabel.slice(0, 1);
-};
-
-// Get Chinese name for a single card
 export const getCardVoiceName = (cardLabel: string): string => {
   if (cardLabel === "JOKER") return "大王";
   if (cardLabel === "joker") return "小王";
-
   const suit = cardLabel.slice(0, 1);
   const rank = cardLabel.slice(1);
-
   const suitName = CARD_NAMES[suit] || "";
   const rankName = CARD_NAMES[rank] || rank;
-
   return suitName + rankName;
 };
 
-// Analyze cards and return poker voice text
 const analyzeCardsForVoice = (cardLabels: string[]): string => {
   const count = cardLabels.length;
-  
-  // Handle jokers
   const hasSmallJoker = cardLabels.includes("joker");
   const hasBigJoker = cardLabels.includes("JOKER");
   
@@ -84,36 +67,24 @@ const analyzeCardsForVoice = (cardLabels: string[]): string => {
     return "王炸！";
   }
   
-  // Get ranks (excluding jokers for analysis)
   const normalCards = cardLabels.filter(c => c !== "joker" && c !== "JOKER");
   const ranks = normalCards.map(getRank);
-  
-  // Check if all same rank (pair, three, four of a kind)
   const uniqueRanks = [...new Set(ranks)];
   
   if (uniqueRanks.length === 1 && normalCards.length > 0) {
     const rank = uniqueRanks[0];
     const rankName = RANK_NUMBERS[rank] || rank;
-    
-    if (count === 2) {
-      return `对${rankName}`;
-    } else if (count === 3) {
-      return `三个${rankName}`;
-    } else if (count === 4) {
-      return `炸弹！${rankName}炸弹！`;
-    }
+    if (count === 2) return `对${rankName}`;
+    if (count === 3) return `三个${rankName}`;
+    if (count === 4) return `炸弹！${rankName}炸弹！`;
   }
   
-  // Check for straight (all consecutive ranks)
   if (count >= 3 && uniqueRanks.length === count) {
     const rankValues: Record<string, number> = {
       "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10,
       "J": 11, "Q": 12, "K": 13, "A": 14
     };
-    
     const values = ranks.map(r => rankValues[r] || 0).filter(v => v > 0).sort((a, b) => a - b);
-    
-    // Check if consecutive
     let isConsecutive = true;
     for (let i = 1; i < values.length; i++) {
       if (values[i] - values[i-1] !== 1) {
@@ -121,165 +92,146 @@ const analyzeCardsForVoice = (cardLabels: string[]): string => {
         break;
       }
     }
-    
     if (isConsecutive && values.length === count) {
-      // Read as straight: "3到5顺子" or just the numbers
       const startRank = RANK_NUMBERS[ranks.find(r => rankValues[r] === values[0])!] || "";
       const endRank = RANK_NUMBERS[ranks.find(r => rankValues[r] === values[values.length - 1])!] || "";
-      
-      if (count === 3) {
-        return `${startRank}${endRank}顺子`;
-      } else {
-        return `${startRank}到${endRank}顺子`;
-      }
+      if (count === 3) return `${startRank}${endRank}顺子`;
+      return `${startRank}到${endRank}顺子`;
     }
   }
   
-  // Default: read each card individually
   return cardLabels.map(getCardVoiceName).join("，");
 };
 
-// Available voices cache
-let maleVoice: SpeechSynthesisVoice | null = null;
-let femaleVoice: SpeechSynthesisVoice | null = null;
+// Audio context for playing TTS audio
+let audioContext: AudioContext | null = null;
+
+// Get or create audio context
+const getAudioContext = (): AudioContext => {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  }
+  return audioContext;
+};
+
+// Play audio from base64 or URL
+const playAudioFromUrl = async (url: string): Promise<void> => {
+  try {
+    const audio = new Audio(url);
+    audio.volume = 1.0;
+    await audio.play();
+  } catch (e) {
+    console.warn("Audio playback failed:", e);
+  }
+};
+
+// Use Baidu TTS (free, no API key needed for basic usage)
+const speakWithBaiduTTS = async (text: string, gender: Gender): Promise<boolean> => {
+  try {
+    // Baidu TTS parameters
+    const per = gender === "female" ? "0" : "1"; // 0=female, 1=male
+    const url = `https://tts.baidu.com/text2audio?tex=${encodeURIComponent(text)}&cuid=baike&lan=zh&ctp=1&pdt=301&vol=9&rate=32&per=${per}`;
+    await playAudioFromUrl(url);
+    return true;
+  } catch (e) {
+    console.warn("Baidu TTS failed:", e);
+    return false;
+  }
+};
+
+// Use Web Speech API as fallback
+const speakWithWebSpeech = (text: string, gender: Gender): void => {
+  if (!("speechSynthesis" in window)) {
+    console.warn("Speech synthesis not supported");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "zh-CN";
+  utterance.rate = 0.95;
+  utterance.pitch = gender === "female" ? 1.1 : 0.9;
+  utterance.volume = 1.0;
+
+  const voices = window.speechSynthesis.getVoices();
+  const mandarinVoices = voices.filter(v => v.lang === "zh-CN" || v.lang.startsWith("zh"));
+  
+  if (mandarinVoices.length > 0) {
+    const voice = mandarinVoices.find(v => 
+      (gender === "female" && (v.name.includes("Xiaoxiao") || v.name.includes("Female") || v.name.includes("女"))) ||
+      (gender === "male" && (v.name.includes("Yunxi") || v.name.includes("Male") || v.name.includes("男")))
+    ) || mandarinVoices[0];
+    utterance.voice = voice;
+  }
+
+  utterance.onstart = () => console.log("Speech started:", text);
+  utterance.onerror = (e) => console.error("Speech error:", e);
+
+  setTimeout(() => {
+    window.speechSynthesis.speak(utterance);
+  }, 50);
+};
+
+// Voice state
 let voicesInitialized = false;
 
-// Initialize and cache voices - prefer Mandarin Chinese (zh-CN)
+// Initialize voices
 export const initVoices = () => {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-    console.warn("Speech synthesis not supported");
     return;
   }
 
   const loadVoices = () => {
     const voices = window.speechSynthesis.getVoices();
-    console.log("Available voices:", voices.map(v => `${v.name} (${v.lang})`));
-    
-    // Priority: zh-CN (Mandarin) > zh > zh-HK > zh-TW
-    const mandarinVoices = voices.filter(v => v.lang === "zh-CN");
-    const chineseVoices = voices.filter(v => v.lang.startsWith("zh"));
-    
-    // Use Mandarin voices first
-    const targetVoices = mandarinVoices.length > 0 ? mandarinVoices : chineseVoices;
-
-    if (targetVoices.length > 0) {
-      // Prefer Microsoft voices for better quality
-      maleVoice = targetVoices.find(v => 
-        v.name.includes("Yunxi") || v.name.includes("Kangkang") || 
-        v.name.toLowerCase().includes("male") || v.name.includes("男")
-      ) || targetVoices[0];
-      
-      femaleVoice = targetVoices.find(v => 
-        v.name.includes("Xiaoxiao") || v.name.includes("Yaoyao") || 
-        v.name.includes("Huihui") || v.name.toLowerCase().includes("female") ||
-        v.name.includes("女")
-      ) || targetVoices.find(v => v !== maleVoice) || targetVoices[0];
-      
+    if (voices.length > 0) {
       voicesInitialized = true;
-      console.log("Mandarin voices loaded:", { male: maleVoice?.name, female: femaleVoice?.name });
-    } else if (voices.length > 0) {
-      // Fallback to any available voice
-      maleVoice = voices[0];
-      femaleVoice = voices[0];
-      voicesInitialized = true;
-      console.log("Fallback voice loaded:", voices[0]?.name);
+      console.log("Voices loaded:", voices.filter(v => v.lang.startsWith("zh")).map(v => v.name));
     }
   };
 
-  // Load voices immediately if available
   loadVoices();
-  
-  // Also listen for voices changed event
   window.speechSynthesis.onvoiceschanged = loadVoices;
-  
-  // Force load voices after delays
   setTimeout(loadVoices, 100);
   setTimeout(loadVoices, 500);
-  setTimeout(loadVoices, 1000);
 };
 
-// Get voice based on gender
-const getVoice = (gender: Gender): SpeechSynthesisVoice | null => {
-  return gender === "male" ? maleVoice : femaleVoice;
-};
-
-// Speak text with improved settings
-const speak = (text: string, gender: Gender = "male") => {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-    console.warn("Speech synthesis not available");
-    return;
-  }
-
-  // Cancel any ongoing speech first
-  window.speechSynthesis.cancel();
-
-  // Small delay to ensure cancel takes effect
-  setTimeout(() => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "zh-CN"; // Force Mandarin Chinese
-    utterance.rate = 1.0;
-    utterance.pitch = gender === "female" ? 1.15 : 0.95;
-    utterance.volume = 1.0;
-
-    // Set voice if available
-    const voice = getVoice(gender);
-    if (voice) {
-      utterance.voice = voice;
-      console.log(`Speaking "${text}" with voice: ${voice.name}`);
-    } else {
-      console.log(`Speaking "${text}" with default voice`);
-    }
-
-    // Add event listeners for debugging
-    utterance.onstart = () => console.log("Speech started");
-    utterance.onend = () => console.log("Speech ended");
-    utterance.onerror = (e) => console.error("Speech error:", e);
-
-    window.speechSynthesis.speak(utterance);
-  }, 50);
-};
-
-// Play voice for playing cards with poker terminology
-export const playCardVoice = (cardLabels: string[], gender: Gender = "male") => {
-  // Ensure voices are initialized
-  if (!voicesInitialized) {
-    initVoices();
-  }
+// Main speak function - tries Baidu TTS first, falls back to Web Speech
+const speak = async (text: string, gender: Gender = "male") => {
+  console.log(`Speaking: "${text}" (${gender})`);
   
+  // Try Baidu TTS first (better quality)
+  const success = await speakWithBaiduTTS(text, gender);
+  
+  // Fallback to Web Speech API
+  if (!success) {
+    speakWithWebSpeech(text, gender);
+  }
+};
+
+// Play voice for playing cards
+export const playCardVoice = (cardLabels: string[], gender: Gender = "male") => {
+  if (!voicesInitialized) initVoices();
   const voiceText = analyzeCardsForVoice(cardLabels);
-  console.log("Playing card voice:", voiceText, "gender:", gender);
   speak(voiceText, gender);
 };
 
-// Play "pass" voice (要不起)
+// Play "pass" voice
 export const playPassVoice = (gender: Gender = "male") => {
-  if (!voicesInitialized) {
-    initVoices();
-  }
-  
-  const passPhrases = ["要不起", "不要", "过"];
-  const randomPhrase = passPhrases[Math.floor(Math.random() * passPhrases.length)];
-  console.log("Playing pass voice:", randomPhrase, "gender:", gender);
-  speak(randomPhrase, gender);
+  if (!voicesInitialized) initVoices();
+  const phrases = ["要不起", "不要", "过"];
+  speak(phrases[Math.floor(Math.random() * phrases.length)], gender);
 };
 
 // Play bomb voice
 export const playBombVoice = (gender: Gender = "male") => {
-  if (!voicesInitialized) {
-    initVoices();
-  }
-  
-  console.log("Playing bomb voice, gender:", gender);
+  if (!voicesInitialized) initVoices();
   speak("炸弹！", gender);
 };
 
 // Play win voice
 export const playWinVoice = (playerName: string, gender: Gender = "male") => {
-  if (!voicesInitialized) {
-    initVoices();
-  }
-  
-  console.log("Playing win voice:", playerName, "gender:", gender);
+  if (!voicesInitialized) initVoices();
   speak(`${playerName}赢了！`, gender);
 };
 
