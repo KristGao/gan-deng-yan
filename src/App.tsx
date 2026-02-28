@@ -538,6 +538,21 @@ export default function App() {
     }
   };
 
+  // Effect to auto-roll for AI players (host only)
+  useEffect(() => {
+    if (state.status !== "rolling") return;
+    if (isMultiplayer && myPlayerId !== 0) return;
+    
+    // Auto-roll for AI players
+    const aiPlayers = state.players.filter(p => p.isAI && (state.diceRolls[p.id] === null || state.diceRolls[p.id] === undefined));
+    if (aiPlayers.length > 0) {
+      aiPlayers.forEach(p => {
+        const aiRoll = Math.floor(Math.random() * 6) + 1;
+        socket?.emit("update_dice_roll", roomId, p.id, aiRoll);
+      });
+    }
+  }, [state.status, state.players, state.diceRolls, isMultiplayer, myPlayerId]);
+
   // Effect to check if all players have rolled and process results (host only)
   useEffect(() => {
     if (state.status !== "rolling") return;
