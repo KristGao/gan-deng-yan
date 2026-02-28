@@ -8,7 +8,7 @@ import {
 } from "./game/rules";
 import { getBestPlay } from "./game/ai";
 import { playSound } from "./game/sounds";
-import { playCardVoice, playPassVoice, playBombVoice, playWinVoice, initVoices } from "./game/voice";
+import { playCardVoice, playPassVoice, playBombVoice, playWinVoice, initVoices, isSoundEnabled, setSoundEnabled } from "./game/voice";
 import { CardView } from "./components/Card";
 import { getBotChatResponse } from "./services/geminiService";
 import { io, Socket } from "socket.io-client";
@@ -23,6 +23,8 @@ import {
   X,
   MessageCircle,
   Send,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -269,7 +271,18 @@ export default function App() {
   const [roomError, setRoomError] = useState("");
   const [showRoomInput, setShowRoomInput] = useState<"host" | "participant" | null>(null);
   const [showHostKeyInput, setShowHostKeyInput] = useState(false);
+  const [soundEnabled, setSoundEnabledState] = useState<boolean>(true);
   const GAME_KEY = "001";
+
+  useEffect(() => {
+    setSoundEnabledState(isSoundEnabled());
+  }, []);
+
+  const toggleSoundEnabled = () => {
+    const newState = !soundEnabled;
+    setSoundEnabled(newState);
+    setSoundEnabledState(newState);
+  };
 
   const t = (key: keyof typeof TRANSLATIONS["en"], ...args: any[]) => {
     let str = TRANSLATIONS[lang][key] || TRANSLATIONS["en"][key];
@@ -954,12 +967,24 @@ export default function App() {
     if (showHostKeyInput) {
       return (
         <div className="min-h-screen bg-yellow-400 flex flex-col items-center justify-center p-4 font-sans">
-          <button
-            onClick={() => setLang(lang === "en" ? "zh" : "en")}
-            className="absolute top-4 right-4 z-50 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-md font-black text-sky-500 hover:bg-white transition-colors border-2 border-sky-100"
-          >
-            {lang === "en" ? "中文" : "English"}
-          </button>
+          <div className="absolute top-4 right-4 z-50 flex gap-2">
+            <button
+              onClick={toggleSoundEnabled}
+              className={`px-4 py-2 rounded-full shadow-md font-black transition-colors border-2 ${
+                soundEnabled 
+                  ? "bg-green-400 text-white border-green-500" 
+                  : "bg-gray-200 text-gray-600 border-gray-300"
+              }`}
+            >
+              {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            </button>
+            <button
+              onClick={() => setLang(lang === "en" ? "zh" : "en")}
+              className="bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-md font-black text-sky-500 hover:bg-white transition-colors border-2 border-sky-100"
+            >
+              {lang === "en" ? "中文" : "English"}
+            </button>
+          </div>
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -1031,12 +1056,24 @@ export default function App() {
     if (!userRole && !hasRoomParam && !showRoomInput) {
       return (
         <div className="min-h-screen bg-yellow-400 flex flex-col items-center justify-center p-4 font-sans">
-          <button
-            onClick={() => setLang(lang === "en" ? "zh" : "en")}
-            className="absolute top-4 right-4 z-50 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-md font-black text-sky-500 hover:bg-white transition-colors border-2 border-sky-100"
-          >
-            {lang === "en" ? "中文" : "English"}
-          </button>
+          <div className="absolute top-4 right-4 z-50 flex gap-2">
+            <button
+              onClick={toggleSoundEnabled}
+              className={`px-4 py-2 rounded-full shadow-md font-black transition-colors border-2 ${
+                soundEnabled 
+                  ? "bg-green-400 text-white border-green-500" 
+                  : "bg-gray-200 text-gray-600 border-gray-300"
+              }`}
+            >
+              {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            </button>
+            <button
+              onClick={() => setLang(lang === "en" ? "zh" : "en")}
+              className="bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-md font-black text-sky-500 hover:bg-white transition-colors border-2 border-sky-100"
+            >
+              {lang === "en" ? "中文" : "English"}
+            </button>
+          </div>
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -1093,12 +1130,24 @@ export default function App() {
       const isHostMode = showRoomInput === "host";
       return (
         <div className="min-h-screen bg-yellow-400 flex flex-col items-center justify-center p-4 font-sans">
-          <button
-            onClick={() => setLang(lang === "en" ? "zh" : "en")}
-            className="absolute top-4 right-4 z-50 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-md font-black text-sky-500 hover:bg-white transition-colors border-2 border-sky-100"
-          >
-            {lang === "en" ? "中文" : "English"}
-          </button>
+          <div className="absolute top-4 right-4 z-50 flex gap-2">
+            <button
+              onClick={toggleSoundEnabled}
+              className={`px-4 py-2 rounded-full shadow-md font-black transition-colors border-2 ${
+                soundEnabled 
+                  ? "bg-green-400 text-white border-green-500" 
+                  : "bg-gray-200 text-gray-600 border-gray-300"
+              }`}
+            >
+              {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            </button>
+            <button
+              onClick={() => setLang(lang === "en" ? "zh" : "en")}
+              className="bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-md font-black text-sky-500 hover:bg-white transition-colors border-2 border-sky-100"
+            >
+              {lang === "en" ? "中文" : "English"}
+            </button>
+          </div>
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -1203,12 +1252,24 @@ export default function App() {
     // Main game setup screen
     return (
       <div className="min-h-screen bg-yellow-400 flex flex-col items-center justify-center p-4 font-sans overflow-hidden">
-        <button
-          onClick={() => setLang(lang === "en" ? "zh" : "en")}
-          className="absolute top-4 right-4 z-50 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-md font-black text-sky-500 hover:bg-white transition-colors border-2 border-sky-100"
-        >
-          {lang === "en" ? "中文" : "English"}
-        </button>
+        <div className="absolute top-4 right-4 z-50 flex gap-2">
+          <button
+            onClick={toggleSoundEnabled}
+            className={`px-4 py-2 rounded-full shadow-md font-black transition-colors border-2 ${
+              soundEnabled 
+                ? "bg-green-400 text-white border-green-500" 
+                : "bg-gray-200 text-gray-600 border-gray-300"
+            }`}
+          >
+            {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          </button>
+          <button
+            onClick={() => setLang(lang === "en" ? "zh" : "en")}
+            className="bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-md font-black text-sky-500 hover:bg-white transition-colors border-2 border-sky-100"
+          >
+            {lang === "en" ? "中文" : "English"}
+          </button>
+        </div>
         
         {/* Role indicator */}
         <div className="absolute top-4 left-4 z-50">
@@ -1404,6 +1465,17 @@ export default function App() {
           </h1>
         </div>
         <div className="flex gap-4">
+          <button
+            onClick={toggleSoundEnabled}
+            className={`px-4 py-2 rounded-2xl flex items-center gap-2 font-black transition-all ${
+              soundEnabled 
+                ? "bg-green-400 text-white shadow-[0_3px_0_#16a34a]" 
+                : "bg-gray-300 text-gray-600 shadow-[0_3px_0_#6b7280]"
+            }`}
+            title={soundEnabled ? "关闭声音" : "开启声音"}
+          >
+            {soundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+          </button>
           <div className="bg-rose-100 px-4 py-2 rounded-2xl flex items-center gap-2 font-black text-rose-500">
             {t("multiplier")}: x{state.multiplier}
           </div>

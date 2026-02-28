@@ -48,8 +48,6 @@ export const getCardVoiceName = (label: string): string => {
 const analyzeCardsForVoice = (cardLabels: string[]): string => {
   const count = cardLabels.length;
   
-  console.log("🎤 analyzeCardsForVoice input:", cardLabels);
-  
   // Handle jokers - check for both BJ and RJ
   const hasSmallJoker = cardLabels.includes("BJ");
   const hasBigJoker = cardLabels.includes("RJ");
@@ -62,20 +60,12 @@ const analyzeCardsForVoice = (cardLabels: string[]): string => {
   const normalCards = cardLabels.filter(c => c !== "BJ" && c !== "RJ");
   const uniqueRanks = [...new Set(normalCards)];
   
-  console.log("🎤 normalCards:", normalCards, "uniqueRanks:", uniqueRanks);
-  
   // Check if all same rank (pair, three, four of a kind)
   if (uniqueRanks.length === 1 && normalCards.length > 0) {
     const rank = uniqueRanks[0];
     const rankName = RANK_NAMES[rank] || rank;
     
-    console.log("🎤 Same rank detected - rank:", rank, "rankName:", rankName, "count:", count);
-    
-    if (count === 2) {
-      const result = `对${rankName}`;
-      console.log("🎤 Pair result:", result);
-      return result;
-    }
+    if (count === 2) return `对${rankName}`;
     if (count === 3) return `三个${rankName}`;
     if (count === 4) return `炸弹！${rankName}炸弹！`;
   }
@@ -115,10 +105,32 @@ const analyzeCardsForVoice = (cardLabels: string[]): string => {
 let voicesInitialized = false;
 let cachedVoices: SpeechSynthesisVoice[] = [];
 
+// Sound enabled state (persisted to localStorage)
+const SOUND_ENABLED_KEY = "gan-deng-yan-sound-enabled";
+
+export const isSoundEnabled = (): boolean => {
+  if (typeof window === "undefined") return true;
+  const stored = localStorage.getItem(SOUND_ENABLED_KEY);
+  return stored === null ? true : stored === "true";
+};
+
+export const setSoundEnabled = (enabled: boolean): void => {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(SOUND_ENABLED_KEY, String(enabled));
+  if (!enabled) {
+    clearSpeechQueue();
+  }
+};
+
+export const toggleSound = (): boolean => {
+  const newState = !isSoundEnabled();
+  setSoundEnabled(newState);
+  return newState;
+};
+
 // Initialize voices
 export const initVoices = () => {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-    console.warn("Speech synthesis not supported");
     return;
   }
 
@@ -127,14 +139,12 @@ export const initVoices = () => {
     if (voices.length > 0) {
       cachedVoices = voices;
       voicesInitialized = true;
-      console.log("Voices loaded:", voices.filter(v => v.lang.startsWith("zh")).map(v => v.name).join(", ") || "No Chinese voices");
     }
   };
 
   loadVoices();
   window.speechSynthesis.onvoiceschanged = loadVoices;
   
-  // Retry loading voices
   setTimeout(loadVoices, 100);
   setTimeout(loadVoices, 500);
   setTimeout(loadVoices, 1000);
@@ -144,12 +154,16 @@ export const initVoices = () => {
 const speakWithWebSpeech = (text: string, gender: Gender): Promise<boolean> => {
   return new Promise((resolve) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      console.warn("Speech synthesis not supported");
       resolve(false);
       return;
     }
 
-    // Cancel any ongoing speech
+    // Check if sound is enabled
+    if (!isSoundEnabled()) {
+      resolve(true);
+      return;
+    }
+
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
@@ -158,7 +172,6 @@ const speakWithWebSpeech = (text: string, gender: Gender): Promise<boolean> => {
     utterance.pitch = gender === "female" ? 1.15 : 0.85;
     utterance.volume = 1.0;
 
-    // Find Chinese voice
     const voices = cachedVoices.length > 0 ? cachedVoices : window.speechSynthesis.getVoices();
     const chineseVoices = voices.filter(v => 
       v.lang === "zh-CN" || 
@@ -166,10 +179,7 @@ const speakWithWebSpeech = (text: string, gender: Gender): Promise<boolean> => {
       v.lang.startsWith("zh")
     );
     
-    console.log(`Available Chinese voices: ${chineseVoices.length}`);
-    
     if (chineseVoices.length > 0) {
-      // Try to find a voice matching the gender
       let selectedVoice: SpeechSynthesisVoice | undefined;
       
       if (gender === "female") {
@@ -189,35 +199,20 @@ const speakWithWebSpeech = (text: string, gender: Gender): Promise<boolean> => {
         );
       }
       
-      // Fallback to first Chinese voice
       if (!selectedVoice) {
         selectedVoice = chineseVoices[0];
       }
       
       utterance.voice = selectedVoice;
-      console.log(`Using voice: ${selectedVoice.name} (${selectedVoice.lang})`);
     }
 
-    utterance.onstart = () => {
-      console.log(`🔊 Speaking: "${text}"`);
-    };
-    
-    utterance.onend = () => {
-      console.log(`✅ Speech ended: "${text}"`);
-      resolve(true);
-    };
-    
-    utterance.onerror = (e) => {
-      console.error(`❌ Speech error:`, e);
-      resolve(false);
-    };
+    utterance.onend = () => resolve(true);
+    utterance.onerror = () => resolve(false);
 
-    // Small delay to ensure speech synthesis is ready
     setTimeout(() => {
       try {
         window.speechSynthesis.speak(utterance);
       } catch (e) {
-        console.error("Speech synthesis error:", e);
         resolve(false);
       }
     }, 50);
@@ -226,38 +221,42 @@ const speakWithWebSpeech = (text: string, gender: Gender): Promise<boolean> => {
 
 // Main speak function
 const speak = async (text: string, gender: Gender = "male") => {
-  console.log(`🎤 Request to speak: "${text}" (${gender})`);
+  // Check if sound is enabled
+  if (!isSoundEnabled()) {
+    return;
+  }
   
-  // Ensure voices are loaded
   if (!voicesInitialized) {
     initVoices();
-    // Wait a bit for voices to load
     await new Promise(r => setTimeout(r, 200));
   }
   
-  // Use Web Speech API
   await speakWithWebSpeech(text, gender);
 };
 
 // Play voice for playing cards
 export const playCardVoice = (cardLabels: string[], gender: Gender = "male") => {
+  if (!isSoundEnabled()) return;
   const voiceText = analyzeCardsForVoice(cardLabels);
   speak(voiceText, gender);
 };
 
 // Play "pass" voice
 export const playPassVoice = (gender: Gender = "male") => {
+  if (!isSoundEnabled()) return;
   const phrases = ["要不起", "不要", "过"];
   speak(phrases[Math.floor(Math.random() * phrases.length)], gender);
 };
 
 // Play bomb voice
 export const playBombVoice = (gender: Gender = "male") => {
+  if (!isSoundEnabled()) return;
   speak("炸弹！", gender);
 };
 
 // Play win voice
 export const playWinVoice = (playerName: string, gender: Gender = "male") => {
+  if (!isSoundEnabled()) return;
   speak(`${playerName}赢了！`, gender);
 };
 
