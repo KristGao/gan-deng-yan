@@ -1,5 +1,5 @@
 // Voice synthesis for card playing and game actions
-// Uses Web Speech API with improved settings for more natural voice
+// Uses Web Speech API with poker terminology in Mandarin Chinese
 
 export type Gender = "male" | "female";
 
@@ -28,7 +28,37 @@ const CARD_NAMES: Record<string, string> = {
   "JOKER": "大王",
 };
 
-// Get Chinese name for a card
+// Rank number mapping for poker terms
+const RANK_NUMBERS: Record<string, string> = {
+  "3": "三",
+  "4": "四",
+  "5": "五",
+  "6": "六",
+  "7": "七",
+  "8": "八",
+  "9": "九",
+  "10": "十",
+  "J": "勾",
+  "Q": "圈",
+  "K": "凯",
+  "A": "尖",
+  "2": "二",
+};
+
+// Get rank from card label
+const getRank = (cardLabel: string): string => {
+  if (cardLabel === "JOKER") return "大王";
+  if (cardLabel === "joker") return "小王";
+  return cardLabel.slice(1);
+};
+
+// Get suit from card label
+const getSuit = (cardLabel: string): string => {
+  if (cardLabel === "JOKER" || cardLabel === "joker") return "";
+  return cardLabel.slice(0, 1);
+};
+
+// Get Chinese name for a single card
 export const getCardVoiceName = (cardLabel: string): string => {
   if (cardLabel === "JOKER") return "大王";
   if (cardLabel === "joker") return "小王";
@@ -42,12 +72,79 @@ export const getCardVoiceName = (cardLabel: string): string => {
   return suitName + rankName;
 };
 
+// Analyze cards and return poker voice text
+const analyzeCardsForVoice = (cardLabels: string[]): string => {
+  const count = cardLabels.length;
+  
+  // Handle jokers
+  const hasSmallJoker = cardLabels.includes("joker");
+  const hasBigJoker = cardLabels.includes("JOKER");
+  
+  if (hasSmallJoker && hasBigJoker) {
+    return "王炸！";
+  }
+  
+  // Get ranks (excluding jokers for analysis)
+  const normalCards = cardLabels.filter(c => c !== "joker" && c !== "JOKER");
+  const ranks = normalCards.map(getRank);
+  
+  // Check if all same rank (pair, three, four of a kind)
+  const uniqueRanks = [...new Set(ranks)];
+  
+  if (uniqueRanks.length === 1 && normalCards.length > 0) {
+    const rank = uniqueRanks[0];
+    const rankName = RANK_NUMBERS[rank] || rank;
+    
+    if (count === 2) {
+      return `对${rankName}`;
+    } else if (count === 3) {
+      return `三个${rankName}`;
+    } else if (count === 4) {
+      return `炸弹！${rankName}炸弹！`;
+    }
+  }
+  
+  // Check for straight (all consecutive ranks)
+  if (count >= 3 && uniqueRanks.length === count) {
+    const rankValues: Record<string, number> = {
+      "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9, "10": 10,
+      "J": 11, "Q": 12, "K": 13, "A": 14
+    };
+    
+    const values = ranks.map(r => rankValues[r] || 0).filter(v => v > 0).sort((a, b) => a - b);
+    
+    // Check if consecutive
+    let isConsecutive = true;
+    for (let i = 1; i < values.length; i++) {
+      if (values[i] - values[i-1] !== 1) {
+        isConsecutive = false;
+        break;
+      }
+    }
+    
+    if (isConsecutive && values.length === count) {
+      // Read as straight: "3到5顺子" or just the numbers
+      const startRank = RANK_NUMBERS[ranks.find(r => rankValues[r] === values[0])!] || "";
+      const endRank = RANK_NUMBERS[ranks.find(r => rankValues[r] === values[values.length - 1])!] || "";
+      
+      if (count === 3) {
+        return `${startRank}${endRank}顺子`;
+      } else {
+        return `${startRank}到${endRank}顺子`;
+      }
+    }
+  }
+  
+  // Default: read each card individually
+  return cardLabels.map(getCardVoiceName).join("，");
+};
+
 // Available voices cache
 let maleVoice: SpeechSynthesisVoice | null = null;
 let femaleVoice: SpeechSynthesisVoice | null = null;
 let voicesInitialized = false;
 
-// Initialize and cache voices
+// Initialize and cache voices - prefer Mandarin Chinese (zh-CN)
 export const initVoices = () => {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) {
     console.warn("Speech synthesis not supported");
@@ -58,31 +155,34 @@ export const initVoices = () => {
     const voices = window.speechSynthesis.getVoices();
     console.log("Available voices:", voices.map(v => `${v.name} (${v.lang})`));
     
-    // Find Chinese voices
-    const chineseVoices = voices.filter(
-      (v) => v.lang.includes("zh") || v.lang.includes("CN") || v.lang.includes("HK") || v.lang.includes("TW")
-    );
+    // Priority: zh-CN (Mandarin) > zh > zh-HK > zh-TW
+    const mandarinVoices = voices.filter(v => v.lang === "zh-CN");
+    const chineseVoices = voices.filter(v => v.lang.startsWith("zh"));
+    
+    // Use Mandarin voices first
+    const targetVoices = mandarinVoices.length > 0 ? mandarinVoices : chineseVoices;
 
-    if (chineseVoices.length > 0) {
+    if (targetVoices.length > 0) {
       // Prefer Microsoft voices for better quality
-      maleVoice = chineseVoices.find(v => 
-        v.name.includes("Yunxi") || v.name.includes("Kangkang") || v.name.toLowerCase().includes("male")
-      ) || chineseVoices[0];
+      maleVoice = targetVoices.find(v => 
+        v.name.includes("Yunxi") || v.name.includes("Kangkang") || 
+        v.name.toLowerCase().includes("male") || v.name.includes("男")
+      ) || targetVoices[0];
       
-      femaleVoice = chineseVoices.find(v => 
-        v.name.includes("Xiaoxiao") || v.name.includes("Yaoyao") || v.name.includes("Huihui") || v.name.toLowerCase().includes("female")
-      ) || chineseVoices.find(v => v !== maleVoice) || chineseVoices[0];
+      femaleVoice = targetVoices.find(v => 
+        v.name.includes("Xiaoxiao") || v.name.includes("Yaoyao") || 
+        v.name.includes("Huihui") || v.name.toLowerCase().includes("female") ||
+        v.name.includes("女")
+      ) || targetVoices.find(v => v !== maleVoice) || targetVoices[0];
       
       voicesInitialized = true;
-      console.log("Chinese voices loaded:", { male: maleVoice?.name, female: femaleVoice?.name });
-    } else {
+      console.log("Mandarin voices loaded:", { male: maleVoice?.name, female: femaleVoice?.name });
+    } else if (voices.length > 0) {
       // Fallback to any available voice
-      if (voices.length > 0) {
-        maleVoice = voices[0];
-        femaleVoice = voices[0];
-        voicesInitialized = true;
-        console.log("Fallback voice loaded:", voices[0]?.name);
-      }
+      maleVoice = voices[0];
+      femaleVoice = voices[0];
+      voicesInitialized = true;
+      console.log("Fallback voice loaded:", voices[0]?.name);
     }
   };
 
@@ -92,8 +192,10 @@ export const initVoices = () => {
   // Also listen for voices changed event
   window.speechSynthesis.onvoiceschanged = loadVoices;
   
-  // Force load voices after a short delay
+  // Force load voices after delays
   setTimeout(loadVoices, 100);
+  setTimeout(loadVoices, 500);
+  setTimeout(loadVoices, 1000);
 };
 
 // Get voice based on gender
@@ -114,9 +216,9 @@ const speak = (text: string, gender: Gender = "male") => {
   // Small delay to ensure cancel takes effect
   setTimeout(() => {
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "zh-CN";
+    utterance.lang = "zh-CN"; // Force Mandarin Chinese
     utterance.rate = 1.0;
-    utterance.pitch = gender === "female" ? 1.2 : 0.9;
+    utterance.pitch = gender === "female" ? 1.15 : 0.95;
     utterance.volume = 1.0;
 
     // Set voice if available
@@ -137,16 +239,16 @@ const speak = (text: string, gender: Gender = "male") => {
   }, 50);
 };
 
-// Play voice for playing cards
+// Play voice for playing cards with poker terminology
 export const playCardVoice = (cardLabels: string[], gender: Gender = "male") => {
   // Ensure voices are initialized
   if (!voicesInitialized) {
     initVoices();
   }
   
-  const cardNames = cardLabels.map(getCardVoiceName).join("，");
-  console.log("Playing card voice:", cardNames, "gender:", gender);
-  speak(cardNames, gender);
+  const voiceText = analyzeCardsForVoice(cardLabels);
+  console.log("Playing card voice:", voiceText, "gender:", gender);
+  speak(voiceText, gender);
 };
 
 // Play "pass" voice (要不起)
