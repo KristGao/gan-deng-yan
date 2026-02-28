@@ -1019,20 +1019,20 @@ export default function App() {
             </h2>
 
             <div className="flex justify-center items-center gap-12">
-              {/* Host Option - Circle */}
+              {/* Host Option - 3D Circle */}
               <button
                 onClick={() => setShowHostKeyInput(true)}
-                className="w-40 h-40 bg-rose-500 hover:bg-rose-600 rounded-full font-black text-xl text-white shadow-xl transition-all flex flex-col items-center justify-center gap-2"
+                className="w-40 h-40 bg-gradient-to-br from-rose-400 to-rose-600 hover:from-rose-500 hover:to-rose-700 rounded-full font-black text-xl text-white transition-all flex flex-col items-center justify-center gap-2 border-4 border-rose-300 shadow-[0_8px_0_#be123c,0_12px_20px_rgba(0,0,0,0.3)] active:shadow-[0_4px_0_#be123c,0_6px_10px_rgba(0,0,0,0.3)] active:translate-y-1"
               >
-                <span>主持人</span>
+                <span className="drop-shadow-md">主持人</span>
               </button>
 
-              {/* Participant Option - Circle */}
+              {/* Participant Option - 3D Circle */}
               <button
                 onClick={() => setShowRoomInput("participant")}
-                className="w-40 h-40 bg-sky-500 hover:bg-sky-600 rounded-full font-black text-xl text-white shadow-xl transition-all flex flex-col items-center justify-center gap-2"
+                className="w-40 h-40 bg-gradient-to-br from-sky-400 to-sky-600 hover:from-sky-500 hover:to-sky-700 rounded-full font-black text-xl text-white transition-all flex flex-col items-center justify-center gap-2 border-4 border-sky-300 shadow-[0_8px_0_#0369a1,0_12px_20px_rgba(0,0,0,0.3)] active:shadow-[0_4px_0_#0369a1,0_6px_10px_rgba(0,0,0,0.3)] active:translate-y-1"
               >
-                <span>参与者</span>
+                <span className="drop-shadow-md">参与者</span>
               </button>
             </div>
           </motion.div>
