@@ -48,6 +48,8 @@ export const getCardVoiceName = (label: string): string => {
 const analyzeCardsForVoice = (cardLabels: string[]): string => {
   const count = cardLabels.length;
   
+  console.log("🎤 analyzeCardsForVoice input:", cardLabels);
+  
   // Handle jokers - check for both BJ and RJ
   const hasSmallJoker = cardLabels.includes("BJ");
   const hasBigJoker = cardLabels.includes("RJ");
@@ -60,12 +62,20 @@ const analyzeCardsForVoice = (cardLabels: string[]): string => {
   const normalCards = cardLabels.filter(c => c !== "BJ" && c !== "RJ");
   const uniqueRanks = [...new Set(normalCards)];
   
+  console.log("🎤 normalCards:", normalCards, "uniqueRanks:", uniqueRanks);
+  
   // Check if all same rank (pair, three, four of a kind)
   if (uniqueRanks.length === 1 && normalCards.length > 0) {
     const rank = uniqueRanks[0];
     const rankName = RANK_NAMES[rank] || rank;
     
-    if (count === 2) return `对${rankName}`;
+    console.log("🎤 Same rank detected - rank:", rank, "rankName:", rankName, "count:", count);
+    
+    if (count === 2) {
+      const result = `对${rankName}`;
+      console.log("🎤 Pair result:", result);
+      return result;
+    }
     if (count === 3) return `三个${rankName}`;
     if (count === 4) return `炸弹！${rankName}炸弹！`;
   }
