@@ -244,7 +244,7 @@ export default function App() {
     status: "setup",
     players: [],
     deck: [],
-    currentPlayerIndex: 0,
+    currentPlayerIndex: null,
     currentPlay: null,
     lastPlayPlayerIndex: null,
     winner: null,
@@ -482,7 +482,7 @@ export default function App() {
       status: "rolling",
       players,
       deck,
-      currentPlayerIndex: 0,
+      currentPlayerIndex: players[0].id,
       currentPlay: null,
       lastPlayPlayerIndex: null,
       winner: null,
@@ -629,7 +629,7 @@ export default function App() {
       status: "playing",
       players: newPlayers,
       deck,
-      currentPlayerIndex: starterPlayerId,
+      currentPlayerIndex: newPlayers[starterArrayIndex].id,
       currentPlay: null,
       lastPlayPlayerIndex: null,
       winner: null,
@@ -1399,7 +1399,7 @@ export default function App() {
             const x = 38 * Math.cos((angle * Math.PI) / 180);
             const y = 38 * Math.sin((angle * Math.PI) / 180);
 
-            const isCurrent = i === state.currentPlayerIndex;
+            const isCurrent = p.id === state.currentPlayerIndex;
 
             return (
               <motion.div
