@@ -544,7 +544,7 @@ export default function App() {
     if (isMultiplayer && myPlayerId !== 0) return;
     
     const allRolled = state.players.every(p => 
-      p.isAI || (state.diceRolls[p.id] !== null && state.diceRolls[p.id] !== undefined)
+      state.diceRolls[p.id] !== null && state.diceRolls[p.id] !== undefined
     );
     
     if (allRolled) {
@@ -1108,20 +1108,31 @@ export default function App() {
                     const url = new URL(window.location.href);
                     url.searchParams.set("room", roomNumber);
                     window.history.pushState({}, "", url);
-                    // Set first available seat for host
+                    // Set first available seat for host immediately
                     const emptyIndex = setupPlayers.findIndex((p) => p === null);
                     if (emptyIndex !== -1) {
-                      joinTable(emptyIndex);
+                      const newSetup = [...setupPlayers];
+                      newSetup[emptyIndex] = {
+                        id: emptyIndex,
+                        name: userName,
+                        isAI: false,
+                        hand: [],
+                        avatar: userAvatar,
+                        coins: initialCoins,
+                      };
+                      setSetupPlayers(newSetup);
+                      setMyPlayerId(emptyIndex);
+                      
+                      // Register as host and sync state after socket connects
+                      setTimeout(() => {
+                        if (socket) {
+                          socket.emit("register_host", roomNumber);
+                          socket.emit("update_host", roomNumber, emptyIndex);
+                          socket.emit("update_setup_players", roomNumber, newSetup);
+                          socket.emit("update_initial_coins", roomNumber, initialCoins);
+                        }
+                      }, 500);
                     }
-                    // Register as host
-                    setTimeout(() => {
-                      if (socket) {
-                        socket.emit("register_host", roomNumber);
-                        socket.emit("update_host", roomNumber, emptyIndex);
-                        socket.emit("update_setup_players", roomNumber, setupPlayers);
-                        socket.emit("update_initial_coins", roomNumber, initialCoins);
-                      }
-                    }, 500);
                     setShowRoomInput(null);
                   } else {
                     // Participant joins room
