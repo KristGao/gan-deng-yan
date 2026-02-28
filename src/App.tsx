@@ -239,6 +239,9 @@ export default function App() {
   const [showKeyInput, setShowKeyInput] = useState(false);
   const [keyInput, setKeyInput] = useState("");
   const [keyError, setKeyError] = useState("");
+  const [roomNumber, setRoomNumber] = useState("");
+  const [roomError, setRoomError] = useState("");
+  const [showRoomInput, setShowRoomInput] = useState<"host" | "participant" | null>(null);
   const GAME_KEY = "001";
 
   const t = (key: keyof typeof TRANSLATIONS["en"], ...args: any[]) => {
@@ -882,8 +885,60 @@ export default function App() {
       // This will be handled in initSocket when room_state is received
     }
     
-    // Key input screen for host verification
-    if (!userRole && !hasRoomParam) {
+    // Role selection screen
+    if (!userRole && !hasRoomParam && !showRoomInput) {
+      return (
+        <div className="min-h-screen bg-yellow-400 flex flex-col items-center justify-center p-4 font-sans">
+          <button
+            onClick={() => setLang(lang === "en" ? "zh" : "en")}
+            className="absolute top-4 right-4 z-50 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-md font-black text-sky-500 hover:bg-white transition-colors border-2 border-sky-100"
+          >
+            {lang === "en" ? "中文" : "English"}
+          </button>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-center mb-8"
+          >
+            <h1 className="text-5xl font-black text-white drop-shadow-[0_5px_0_rgba(0,0,0,0.2)] tracking-tighter italic mb-4">
+              {t("title")}
+            </h1>
+            <p className="text-yellow-900 font-bold text-lg opacity-80">
+              {t("subtitle")}
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md"
+          >
+            <div className="flex flex-col gap-4">
+              <h2 className="text-2xl font-black text-zinc-800 text-center mb-6">
+                选择角色
+              </h2>
+              <button
+                onClick={() => setShowRoomInput("host")}
+                className="py-6 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-xl shadow-[0_5px_0_#e11d48] active:translate-y-1 active:shadow-none transition-all"
+              >
+                我是主持人
+              </button>
+              <button
+                onClick={() => setShowRoomInput("participant")}
+                className="py-6 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-black text-xl shadow-[0_5px_0_#0284c7] active:translate-y-1 active:shadow-none transition-all"
+              >
+                我是参与者
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      );
+    }
+
+    // Room number input screen
+    if (showRoomInput) {
+      const isHostMode = showRoomInput === "host";
       return (
         <div className="min-h-screen bg-yellow-400 flex flex-col items-center justify-center p-4 font-sans">
           <button
@@ -913,26 +968,85 @@ export default function App() {
           >
             <div className="flex flex-col gap-4">
               <h2 className="text-2xl font-black text-zinc-800 text-center mb-4">
-                {t("enterGameKey")}
+                {isHostMode ? "创建房间" : "加入房间"}
               </h2>
               <p className="text-sm text-zinc-500 text-center mb-2">
-                输入密钥成为主持人，或通过分享链接加入游戏
+                {isHostMode ? "输入4位数字创建房间" : "输入4位房间号加入游戏"}
               </p>
               <input
                 type="text"
-                value={keyInput}
-                onChange={(e) => setKeyInput(e.target.value)}
-                placeholder={t("gameKeyPlaceholder")}
-                className="w-full text-2xl font-black text-zinc-800 border-b-4 border-yellow-400 focus:outline-none text-center py-2"
+                value={roomNumber}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+                  setRoomNumber(val);
+                }}
+                placeholder="0000"
+                maxLength={4}
+                className="w-full text-4xl font-black text-zinc-800 border-b-4 border-yellow-400 focus:outline-none text-center py-4 tracking-widest"
               />
-              {keyError && (
-                <p className="text-rose-500 font-bold text-center">{keyError}</p>
+              {roomError && (
+                <p className="text-rose-500 font-bold text-center">{roomError}</p>
               )}
               <button
-                onClick={verifyGameKey}
-                className="py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-lg shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all"
+                onClick={() => {
+                  if (roomNumber.length !== 4) {
+                    setRoomError("请输入4位数字");
+                    return;
+                  }
+                  setRoomError("");
+                  if (isHostMode) {
+                    // Host creates room with custom number
+                    setRoomId(roomNumber);
+                    setIsMultiplayer(true);
+                    setUserRole("host");
+                    initSocket(roomNumber);
+                    // Update URL
+                    const url = new URL(window.location.href);
+                    url.searchParams.set("room", roomNumber);
+                    window.history.pushState({}, "", url);
+                    // Set first available seat for host
+                    const emptyIndex = setupPlayers.findIndex((p) => p === null);
+                    if (emptyIndex !== -1) {
+                      joinTable(emptyIndex);
+                    }
+                    // Register as host
+                    setTimeout(() => {
+                      if (socket) {
+                        socket.emit("register_host", roomNumber);
+                        socket.emit("update_host", roomNumber, emptyIndex);
+                        socket.emit("update_setup_players", roomNumber, setupPlayers);
+                        socket.emit("update_initial_coins", roomNumber, initialCoins);
+                      }
+                    }, 500);
+                    setShowRoomInput(null);
+                  } else {
+                    // Participant joins room
+                    setRoomId(roomNumber);
+                    setIsMultiplayer(true);
+                    setUserRole("participant");
+                    initSocket(roomNumber);
+                    // Update URL
+                    const url = new URL(window.location.href);
+                    url.searchParams.set("room", roomNumber);
+                    window.history.pushState({}, "", url);
+                    setShowRoomInput(null);
+                  }
+                }}
+                className={`py-4 text-white rounded-2xl font-black text-lg shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all ${
+                  isHostMode ? "bg-rose-500 hover:bg-rose-600 shadow-[0_5px_0_#e11d48]" : "bg-sky-500 hover:bg-sky-600 shadow-[0_5px_0_#0284c7]"
+                }`}
               >
-                {t("verifyKey")}
+                {isHostMode ? "创建房间" : "加入房间"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowRoomInput(null);
+                  setRoomNumber("");
+                  setRoomError("");
+                }}
+                className="py-3 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-2xl font-bold text-base transition-all"
+              >
+                返回
               </button>
             </div>
           </motion.div>
