@@ -749,6 +749,9 @@ export default function App() {
 
     if (newHand.length === 0) {
       playSound("win");
+      // Play win voice
+      const winnerGender = currentPlayer.gender || (currentPlayer.id % 2 === 0 ? "male" : "female");
+      playWinVoice(currentPlayer.name, winnerGender);
       
       let totalWon = 0;
       const roundResults: RoundResult[] = [];
