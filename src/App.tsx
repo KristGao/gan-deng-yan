@@ -826,8 +826,8 @@ export default function App() {
     const currentPlayer = state.players.find(p => p.id === state.currentPlayerIndex);
     if (!currentPlayer || !currentPlayer.isAI) return;
     
-    // In multiplayer, only the host (player 0) runs AI logic to prevent duplicate actions
-    if (isMultiplayer && myPlayerId !== 0) return;
+    // In multiplayer, only the host runs AI logic to prevent duplicate actions
+    if (isMultiplayer && userRole !== "host") return;
 
     const timer = setTimeout(() => {
       const bestPlay = getBestPlay(currentPlayer.hand, state.currentPlay);
@@ -1610,7 +1610,7 @@ export default function App() {
                 {state.chatMessages.map(msg => {
                   const sender = state.players.find(p => p.id === msg.senderId);
                   if (!sender) return null;
-                  const isMe = !sender.isAI;
+                  const isMe = sender.id === myPlayerId;
                   return (
                     <div key={msg.id} className={`flex gap-2 items-end ${isMe ? 'flex-row-reverse' : ''}`}>
                       <img src={sender.avatar} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />

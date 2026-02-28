@@ -102,8 +102,8 @@ export const analyzePlay = (cards: Card[]): Play | null => {
     }
   }
 
-  // Straight
-  if (len >= 3) {
+  // Straight - max 3 cards
+  if (len === 3) {
     const sortedNormal = [...normal].sort((a, b) => a.rank - b.rank);
     if (sortedNormal[sortedNormal.length - 1].rank <= 14) {
       for (let startRank = 3; startRank <= 15 - len; startRank++) {
