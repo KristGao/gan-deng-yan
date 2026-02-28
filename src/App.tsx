@@ -8,6 +8,7 @@ import {
 } from "./game/rules";
 import { getBestPlay } from "./game/ai";
 import { playSound } from "./game/sounds";
+import { playCardVoice, playPassVoice, playBombVoice, playWinVoice, initVoices } from "./game/voice";
 import { CardView } from "./components/Card";
 import { getBotChatResponse } from "./services/geminiService";
 import { io, Socket } from "socket.io-client";
@@ -32,6 +33,7 @@ type Player = {
   hand: CardType[];
   avatar: string;
   coins: number;
+  gender?: "male" | "female";
 };
 
 type RoundResult = {
@@ -467,6 +469,9 @@ export default function App() {
   };
 
   const startGame = () => {
+    // Initialize voices on game start (requires user interaction)
+    initVoices();
+    
     const activePlayers = setupPlayers.filter((p) => p !== null) as Player[];
     if (activePlayers.length < 2) {
       alert(t("needPlayers"));
@@ -711,11 +716,17 @@ export default function App() {
     );
 
     playSound("play");
+    // Play voice for card playing
+    const playerGender = currentPlayer.gender || (currentPlayer.id % 2 === 0 ? "male" : "female");
+    playCardVoice(cardsToPlay.map((c) => c.label), playerGender);
+    
     addLog(
       t("logPlayed", currentPlayer.name, play.type, cardsToPlay.map((c) => c.label).join(","))
     );
     if (newMultiplier > state.multiplier) {
       addLog(t("logMultiplierUp", newMultiplier));
+      // Play bomb voice
+      playBombVoice(playerGender);
       
       // AI Reaction to Bomb/Rocket
       const aiPlayers = state.players.filter((p) => p.isAI && p.id !== currentPlayer.id);
@@ -810,6 +821,9 @@ export default function App() {
 
     const currentPlayer = state.players.find(p => p.id === state.currentPlayerIndex)!;
     playSound("pass");
+    // Play pass voice
+    const playerGender = currentPlayer.gender || (currentPlayer.id % 2 === 0 ? "male" : "female");
+    playPassVoice(playerGender);
     addLog(`${currentPlayer.name} passed.`);
 
     // Find next player by ID
