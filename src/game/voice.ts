@@ -1,5 +1,4 @@
 // Voice synthesis for card playing and game actions
-// Uses multiple TTS providers for natural sounding voice
 
 export type Gender = "male" | "female";
 
@@ -102,124 +101,153 @@ const analyzeCardsForVoice = (cardLabels: string[]): string => {
   return cardLabels.map(getCardVoiceName).join("，");
 };
 
-// Play audio from URL
-const playAudioFromUrl = async (url: string): Promise<boolean> => {
-  try {
-    const audio = new Audio(url);
-    audio.volume = 1.0;
-    await audio.play();
-    return true;
-  } catch (e) {
-    console.warn("Audio playback failed:", e);
-    return false;
-  }
-};
-
-// Use Baidu TTS (free, no API key needed)
-const speakWithBaiduTTS = async (text: string, gender: Gender): Promise<boolean> => {
-  try {
-    const per = gender === "female" ? "0" : "1";
-    const url = `https://tts.baidu.com/text2audio?tex=${encodeURIComponent(text)}&cuid=baike&lan=zh&ctp=1&pdt=301&vol=9&rate=32&per=${per}`;
-    return await playAudioFromUrl(url);
-  } catch (e) {
-    console.warn("Baidu TTS failed:", e);
-    return false;
-  }
-};
-
-// Use Web Speech API as fallback
-const speakWithWebSpeech = (text: string, gender: Gender): void => {
-  if (!("speechSynthesis" in window)) {
-    console.warn("Speech synthesis not supported");
-    return;
-  }
-
-  window.speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "zh-CN";
-  utterance.rate = 0.95;
-  utterance.pitch = gender === "female" ? 1.1 : 0.9;
-  utterance.volume = 1.0;
-
-  const voices = window.speechSynthesis.getVoices();
-  const mandarinVoices = voices.filter(v => v.lang === "zh-CN" || v.lang.startsWith("zh"));
-  
-  if (mandarinVoices.length > 0) {
-    const voice = mandarinVoices.find(v => 
-      (gender === "female" && (v.name.includes("Xiaoxiao") || v.name.includes("Female") || v.name.includes("女"))) ||
-      (gender === "male" && (v.name.includes("Yunxi") || v.name.includes("Male") || v.name.includes("男")))
-    ) || mandarinVoices[0];
-    utterance.voice = voice;
-  }
-
-  utterance.onstart = () => console.log("Speech started:", text);
-  utterance.onerror = (e) => console.error("Speech error:", e);
-
-  setTimeout(() => {
-    window.speechSynthesis.speak(utterance);
-  }, 50);
-};
-
 // Voice state
 let voicesInitialized = false;
+let cachedVoices: SpeechSynthesisVoice[] = [];
 
 // Initialize voices
 export const initVoices = () => {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+    console.warn("Speech synthesis not supported");
     return;
   }
 
   const loadVoices = () => {
     const voices = window.speechSynthesis.getVoices();
     if (voices.length > 0) {
+      cachedVoices = voices;
       voicesInitialized = true;
-      console.log("Voices loaded:", voices.filter(v => v.lang.startsWith("zh")).map(v => v.name));
+      console.log("Voices loaded:", voices.filter(v => v.lang.startsWith("zh")).map(v => v.name).join(", ") || "No Chinese voices");
     }
   };
 
   loadVoices();
   window.speechSynthesis.onvoiceschanged = loadVoices;
+  
+  // Retry loading voices
   setTimeout(loadVoices, 100);
   setTimeout(loadVoices, 500);
+  setTimeout(loadVoices, 1000);
+};
+
+// Speak using Web Speech API
+const speakWithWebSpeech = (text: string, gender: Gender): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      console.warn("Speech synthesis not supported");
+      resolve(false);
+      return;
+    }
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "zh-CN";
+    utterance.rate = 0.9;
+    utterance.pitch = gender === "female" ? 1.15 : 0.85;
+    utterance.volume = 1.0;
+
+    // Find Chinese voice
+    const voices = cachedVoices.length > 0 ? cachedVoices : window.speechSynthesis.getVoices();
+    const chineseVoices = voices.filter(v => 
+      v.lang === "zh-CN" || 
+      v.lang === "zh-TW" || 
+      v.lang.startsWith("zh")
+    );
+    
+    console.log(`Available Chinese voices: ${chineseVoices.length}`);
+    
+    if (chineseVoices.length > 0) {
+      // Try to find a voice matching the gender
+      let selectedVoice: SpeechSynthesisVoice | undefined;
+      
+      if (gender === "female") {
+        selectedVoice = chineseVoices.find(v => 
+          v.name.toLowerCase().includes("female") || 
+          v.name.toLowerCase().includes("女") ||
+          v.name.toLowerCase().includes("xiaoxiao") ||
+          v.name.toLowerCase().includes("xiaoyan") ||
+          v.name.toLowerCase().includes("tingting")
+        );
+      } else {
+        selectedVoice = chineseVoices.find(v => 
+          v.name.toLowerCase().includes("male") || 
+          v.name.toLowerCase().includes("男") ||
+          v.name.toLowerCase().includes("yunxi") ||
+          v.name.toLowerCase().includes("yunjian")
+        );
+      }
+      
+      // Fallback to first Chinese voice
+      if (!selectedVoice) {
+        selectedVoice = chineseVoices[0];
+      }
+      
+      utterance.voice = selectedVoice;
+      console.log(`Using voice: ${selectedVoice.name} (${selectedVoice.lang})`);
+    }
+
+    utterance.onstart = () => {
+      console.log(`🔊 Speaking: "${text}"`);
+    };
+    
+    utterance.onend = () => {
+      console.log(`✅ Speech ended: "${text}"`);
+      resolve(true);
+    };
+    
+    utterance.onerror = (e) => {
+      console.error(`❌ Speech error:`, e);
+      resolve(false);
+    };
+
+    // Small delay to ensure speech synthesis is ready
+    setTimeout(() => {
+      try {
+        window.speechSynthesis.speak(utterance);
+      } catch (e) {
+        console.error("Speech synthesis error:", e);
+        resolve(false);
+      }
+    }, 50);
+  });
 };
 
 // Main speak function
 const speak = async (text: string, gender: Gender = "male") => {
-  console.log(`Speaking: "${text}" (${gender})`);
+  console.log(`🎤 Request to speak: "${text}" (${gender})`);
   
-  // Try Baidu TTS first
-  const success = await speakWithBaiduTTS(text, gender);
-  
-  // Fallback to Web Speech API
-  if (!success) {
-    speakWithWebSpeech(text, gender);
+  // Ensure voices are loaded
+  if (!voicesInitialized) {
+    initVoices();
+    // Wait a bit for voices to load
+    await new Promise(r => setTimeout(r, 200));
   }
+  
+  // Use Web Speech API
+  await speakWithWebSpeech(text, gender);
 };
 
 // Play voice for playing cards
 export const playCardVoice = (cardLabels: string[], gender: Gender = "male") => {
-  if (!voicesInitialized) initVoices();
   const voiceText = analyzeCardsForVoice(cardLabels);
   speak(voiceText, gender);
 };
 
 // Play "pass" voice
 export const playPassVoice = (gender: Gender = "male") => {
-  if (!voicesInitialized) initVoices();
   const phrases = ["要不起", "不要", "过"];
   speak(phrases[Math.floor(Math.random() * phrases.length)], gender);
 };
 
 // Play bomb voice
 export const playBombVoice = (gender: Gender = "male") => {
-  if (!voicesInitialized) initVoices();
   speak("炸弹！", gender);
 };
 
 // Play win voice
 export const playWinVoice = (playerName: string, gender: Gender = "male") => {
-  if (!voicesInitialized) initVoices();
   speak(`${playerName}赢了！`, gender);
 };
 
