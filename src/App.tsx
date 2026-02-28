@@ -135,7 +135,18 @@ const TRANSLATIONS = {
     participantControls: "Participant: Choose seat, edit name",
     waitingForHost: "Waiting for host to start...",
     youAreHost: "You are the HOST",
-    youAreParticipant: "You are a PARTICIPANT"
+    youAreParticipant: "You are a PARTICIPANT",
+    selectRole: "Select Role",
+    iAmHost: "I am HOST",
+    iAmParticipant: "I am PARTICIPANT",
+    hostVerify: "Host Verification",
+    enterHostKey: "Enter host key",
+    verify: "VERIFY",
+    createRoom: "Create Room",
+    joinRoom: "Join Room",
+    enter4DigitRoom: "Enter 4-digit room number",
+    back: "BACK",
+    keyError: "Wrong key!"
   },
   zh: {
     title: "蛋仔派对！",
@@ -183,7 +194,18 @@ const TRANSLATIONS = {
     participantControls: "参与人：选择座位、修改昵称",
     waitingForHost: "等待主持人开始游戏...",
     youAreHost: "你是主持人",
-    youAreParticipant: "你是参与人"
+    youAreParticipant: "你是参与人",
+    selectRole: "选择角色",
+    iAmHost: "我是主持人",
+    iAmParticipant: "我是参与者",
+    hostVerify: "主持人验证",
+    enterHostKey: "请输入主持人密钥",
+    verify: "验证",
+    createRoom: "创建房间",
+    joinRoom: "加入房间",
+    enter4DigitRoom: "输入4位房间号",
+    back: "返回",
+    keyError: "密钥错误！"
   }
 };
 
@@ -917,20 +939,20 @@ export default function App() {
           >
             <div className="flex flex-col gap-4">
               <h2 className="text-2xl font-black text-zinc-800 text-center mb-4">
-                主持人验证
+                {t("hostVerify")}
               </h2>
               <p className="text-sm text-zinc-500 text-center mb-2">
-                请输入主持人密钥
+                {t("enterHostKey")}
               </p>
               <input
-                type="text"
+                type="password"
                 value={keyInput}
                 onChange={(e) => setKeyInput(e.target.value)}
-                placeholder="001"
+                placeholder="***"
                 className="w-full text-4xl font-black text-zinc-800 border-b-4 border-yellow-400 focus:outline-none text-center py-4 tracking-widest"
               />
               {keyError && (
-                <p className="text-rose-500 font-bold text-center">{keyError}</p>
+                <p className="text-rose-500 font-bold text-center">{t("keyError")}</p>
               )}
               <button
                 onClick={() => {
@@ -940,12 +962,12 @@ export default function App() {
                     setShowRoomInput("host");
                     setKeyInput("");
                   } else {
-                    setKeyError("密钥错误");
+                    setKeyError(t("keyError"));
                   }
                 }}
                 className="py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-lg shadow-[0_5px_0_#e11d48] active:translate-y-1 active:shadow-none transition-all"
               >
-                验证密钥
+                {t("verify")}
               </button>
               <button
                 onClick={() => {
@@ -955,7 +977,7 @@ export default function App() {
                 }}
                 className="py-3 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-2xl font-bold text-base transition-all"
               >
-                返回
+                {t("back")}
               </button>
             </div>
           </motion.div>
@@ -990,23 +1012,34 @@ export default function App() {
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md"
+            className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-2xl"
           >
-            <div className="flex flex-col gap-4">
-              <h2 className="text-2xl font-black text-zinc-800 text-center mb-6">
-                选择角色
-              </h2>
+            <h2 className="text-2xl font-black text-zinc-800 text-center mb-8">
+              {t("selectRole")}
+            </h2>
+            <div className="flex flex-col md:flex-row gap-6">
+              {/* Host Option */}
               <button
                 onClick={() => setShowHostKeyInput(true)}
-                className="py-6 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-xl shadow-[0_5px_0_#e11d48] active:translate-y-1 active:shadow-none transition-all"
+                className="flex-1 py-8 bg-gradient-to-br from-rose-400 to-rose-600 hover:from-rose-500 hover:to-rose-700 text-white rounded-3xl font-black text-xl shadow-[0_8px_0_#e11d48] active:translate-y-2 active:shadow-none transition-all flex flex-col items-center gap-4"
               >
-                我是主持人
+                <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center text-5xl">
+                  👑
+                </div>
+                <span>{t("iAmHost")}</span>
+                <span className="text-sm font-normal opacity-80">{t("hostControls")}</span>
               </button>
+              
+              {/* Participant Option */}
               <button
                 onClick={() => setShowRoomInput("participant")}
-                className="py-6 bg-sky-500 hover:bg-sky-600 text-white rounded-2xl font-black text-xl shadow-[0_5px_0_#0284c7] active:translate-y-1 active:shadow-none transition-all"
+                className="flex-1 py-8 bg-gradient-to-br from-sky-400 to-sky-600 hover:from-sky-500 hover:to-sky-700 text-white rounded-3xl font-black text-xl shadow-[0_8px_0_#0284c7] active:translate-y-2 active:shadow-none transition-all flex flex-col items-center gap-4"
               >
-                我是参与者
+                <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center text-5xl">
+                  🎮
+                </div>
+                <span>{t("iAmParticipant")}</span>
+                <span className="text-sm font-normal opacity-80">{t("participantControls")}</span>
               </button>
             </div>
           </motion.div>
@@ -1046,10 +1079,10 @@ export default function App() {
           >
             <div className="flex flex-col gap-4">
               <h2 className="text-2xl font-black text-zinc-800 text-center mb-4">
-                {isHostMode ? "创建房间" : "加入房间"}
+                {isHostMode ? t("createRoom") : t("joinRoom")}
               </h2>
               <p className="text-sm text-zinc-500 text-center mb-2">
-                {isHostMode ? "输入4位数字创建房间" : "输入4位房间号加入游戏"}
+                {t("enter4DigitRoom")}
               </p>
               <input
                 type="text"
@@ -1068,7 +1101,7 @@ export default function App() {
               <button
                 onClick={() => {
                   if (roomNumber.length !== 4) {
-                    setRoomError("请输入4位数字");
+                    setRoomError(t("enter4DigitRoom"));
                     return;
                   }
                   setRoomError("");
@@ -1114,7 +1147,7 @@ export default function App() {
                   isHostMode ? "bg-rose-500 hover:bg-rose-600 shadow-[0_5px_0_#e11d48]" : "bg-sky-500 hover:bg-sky-600 shadow-[0_5px_0_#0284c7]"
                 }`}
               >
-                {isHostMode ? "创建房间" : "加入房间"}
+                {isHostMode ? t("createRoom") : t("joinRoom")}
               </button>
               <button
                 onClick={() => {
@@ -1124,7 +1157,7 @@ export default function App() {
                 }}
                 className="py-3 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-2xl font-bold text-base transition-all"
               >
-                返回
+                {t("back")}
               </button>
             </div>
           </motion.div>
