@@ -86,7 +86,7 @@ const IDLE_AVATARS = [
   "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop", // Shuhua style
 ];
 
-const BOT_AVATAR = "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=400&fit=crop"; // Robot style
+const BOT_AVATAR = "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop"; // Eggy character style
 
 const MEMBER_NAMES = ["Soyeon", "Miyeon", "Minnie", "Yuqi", "Shuhua"];
 
