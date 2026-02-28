@@ -242,6 +242,7 @@ export default function App() {
   const [roomNumber, setRoomNumber] = useState("");
   const [roomError, setRoomError] = useState("");
   const [showRoomInput, setShowRoomInput] = useState<"host" | "participant" | null>(null);
+  const [showHostKeyInput, setShowHostKeyInput] = useState(false);
   const GAME_KEY = "001";
 
   const t = (key: keyof typeof TRANSLATIONS["en"], ...args: any[]) => {
@@ -885,6 +886,83 @@ export default function App() {
       // This will be handled in initSocket when room_state is received
     }
     
+    // Host key verification screen
+    if (showHostKeyInput) {
+      return (
+        <div className="min-h-screen bg-yellow-400 flex flex-col items-center justify-center p-4 font-sans">
+          <button
+            onClick={() => setLang(lang === "en" ? "zh" : "en")}
+            className="absolute top-4 right-4 z-50 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-md font-black text-sky-500 hover:bg-white transition-colors border-2 border-sky-100"
+          >
+            {lang === "en" ? "中文" : "English"}
+          </button>
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-center mb-8"
+          >
+            <h1 className="text-5xl font-black text-white drop-shadow-[0_5px_0_rgba(0,0,0,0.2)] tracking-tighter italic mb-4">
+              {t("title")}
+            </h1>
+            <p className="text-yellow-900 font-bold text-lg opacity-80">
+              {t("subtitle")}
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md"
+          >
+            <div className="flex flex-col gap-4">
+              <h2 className="text-2xl font-black text-zinc-800 text-center mb-4">
+                主持人验证
+              </h2>
+              <p className="text-sm text-zinc-500 text-center mb-2">
+                请输入主持人密钥
+              </p>
+              <input
+                type="text"
+                value={keyInput}
+                onChange={(e) => setKeyInput(e.target.value)}
+                placeholder="001"
+                className="w-full text-4xl font-black text-zinc-800 border-b-4 border-yellow-400 focus:outline-none text-center py-4 tracking-widest"
+              />
+              {keyError && (
+                <p className="text-rose-500 font-bold text-center">{keyError}</p>
+              )}
+              <button
+                onClick={() => {
+                  if (keyInput === GAME_KEY) {
+                    setKeyError("");
+                    setShowHostKeyInput(false);
+                    setShowRoomInput("host");
+                    setKeyInput("");
+                  } else {
+                    setKeyError("密钥错误");
+                  }
+                }}
+                className="py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-lg shadow-[0_5px_0_#e11d48] active:translate-y-1 active:shadow-none transition-all"
+              >
+                验证密钥
+              </button>
+              <button
+                onClick={() => {
+                  setShowHostKeyInput(false);
+                  setKeyInput("");
+                  setKeyError("");
+                }}
+                className="py-3 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-2xl font-bold text-base transition-all"
+              >
+                返回
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      );
+    }
+
     // Role selection screen
     if (!userRole && !hasRoomParam && !showRoomInput) {
       return (
@@ -919,7 +997,7 @@ export default function App() {
                 选择角色
               </h2>
               <button
-                onClick={() => setShowRoomInput("host")}
+                onClick={() => setShowHostKeyInput(true)}
                 className="py-6 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-xl shadow-[0_5px_0_#e11d48] active:translate-y-1 active:shadow-none transition-all"
               >
                 我是主持人
