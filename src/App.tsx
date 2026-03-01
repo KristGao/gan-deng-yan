@@ -1325,7 +1325,8 @@ export default function App() {
           </p>
         </motion.div>
 
-        <div className="flex items-center justify-center gap-8 w-full max-w-6xl">
+        {/* Table and Member Selection Row */}
+        <div className="flex items-start justify-center gap-8 w-full max-w-6xl">
           {/* Table Area */}
           <div className="relative w-full max-w-2xl aspect-[16/9] bg-yellow-500/30 rounded-[100px] border-8 border-yellow-300/50 flex items-center justify-center">
             {/* Table */}
@@ -1386,14 +1387,14 @@ export default function App() {
           </div>
 
           {/* Right Side - Member Selection */}
-          <div className="bg-white p-6 rounded-3xl shadow-xl w-64 flex flex-col gap-4">
+          <div className="bg-white p-6 rounded-3xl shadow-xl w-80 flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <img
                 src={userAvatar}
                 className="w-16 h-16 rounded-full bg-zinc-100 border-2 border-zinc-200"
               />
-              <div className="flex-1">
-                <label className="text-xs font-black text-zinc-400 uppercase tracking-widest">
+              <div className="flex-1 min-w-0">
+                <label className="text-xs font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap">
                   {t("yourName")}
                 </label>
                 <input
@@ -1433,10 +1434,13 @@ export default function App() {
               </div>
             )}
           </div>
+        </div>
 
+        {/* Buttons Row - Below Table */}
+        <div className="mt-8 flex flex-col items-center gap-6 w-full max-w-2xl">
           {/* Host controls */}
           {isHost ? (
-            <div className="flex flex-wrap gap-3 w-full">
+            <div className="flex flex-wrap gap-3 w-full justify-center">
               {!isMultiplayer ? (
                 <button
                   onClick={createMultiplayerRoom}
