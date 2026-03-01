@@ -1523,7 +1523,7 @@ export default function App() {
         </div>
       </header>
 
-      <main className="flex-1 relative flex items-center justify-center p-8">
+      <main className="flex-1 relative flex items-center justify-center p-8 pb-[340px]">
         {/* Table Background */}
         <div className="absolute w-[80%] h-[80%] bg-sky-500/20 rounded-[100px] border-8 border-sky-300/30" />
         <div className="absolute w-[60%] h-[60%] bg-white/10 rounded-full border-8 border-white/20 shadow-inner" />
