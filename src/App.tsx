@@ -919,7 +919,7 @@ export default function App() {
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [state.currentPlayerIndex, state.status]);
+  }, [state.currentPlayerIndex, state.status, state.players]);
 
   const toggleCardSelection = (cardId: string) => {
     setSelectedCards((prev) =>
