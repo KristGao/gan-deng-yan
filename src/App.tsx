@@ -1002,7 +1002,7 @@ export default function App() {
       // This will be handled in initSocket when room_state is received
     }
     
-    // Host key verification screen
+    // Host key verification and room creation screen (combined)
     if (showHostKeyInput) {
       return (
         <div className="min-h-screen bg-yellow-400 flex flex-col items-center justify-center p-4 font-sans">
@@ -1047,38 +1047,91 @@ export default function App() {
               <h2 className="text-2xl font-black text-zinc-800 text-center mb-4">
                 {t("hostVerify")}
               </h2>
-              <p className="text-sm text-zinc-500 text-center mb-2">
-                {t("enterHostKey")}
-              </p>
-              <input
-                type="password"
-                value={keyInput}
-                onChange={(e) => setKeyInput(e.target.value)}
-                placeholder="***"
-                className="w-full text-4xl font-black text-zinc-800 border-b-4 border-yellow-400 focus:outline-none text-center py-4 tracking-widest"
-              />
+              
+              {/* Game Key Input */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm text-zinc-500 text-center">
+                  {t("enterHostKey")}
+                </label>
+                <input
+                  type="password"
+                  value={keyInput}
+                  onChange={(e) => setKeyInput(e.target.value)}
+                  placeholder="***"
+                  className="w-full text-3xl font-black text-zinc-800 border-b-4 border-yellow-400 focus:outline-none text-center py-3 tracking-widest"
+                />
+              </div>
+              
+              {/* Room Number Input */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm text-zinc-500 text-center">
+                  {t("enter4DigitRoom")}
+                </label>
+                <input
+                  type="text"
+                  value={roomNumber}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+                    setRoomNumber(val);
+                  }}
+                  placeholder="0000"
+                  maxLength={4}
+                  className="w-full text-3xl font-black text-zinc-800 border-b-4 border-sky-400 focus:outline-none text-center py-3 tracking-widest"
+                />
+              </div>
+              
               {keyError && (
-                <p className="text-rose-500 font-bold text-center">{t("keyError")}</p>
+                <p className="text-rose-500 font-bold text-center">{keyError}</p>
               )}
+              
               <button
                 onClick={() => {
-                  if (keyInput === GAME_KEY) {
-                    setKeyError("");
-                    setShowHostKeyInput(false);
-                    setShowRoomInput("host");
-                    setKeyInput("");
-                  } else {
+                  // Validate key
+                  if (keyInput !== GAME_KEY) {
                     setKeyError(t("keyError"));
+                    return;
                   }
+                  // Validate room number
+                  if (roomNumber.length !== 4) {
+                    setKeyError(t("enter4DigitRoom"));
+                    return;
+                  }
+                  
+                  // All valid - create room
+                  setKeyError("");
+                  setRoomId(roomNumber);
+                  setIsMultiplayer(true);
+                  setUserRole("host");
+                  initSocket(roomNumber);
+                  
+                  // Update URL
+                  const url = new URL(window.location.href);
+                  url.searchParams.set("room", roomNumber);
+                  window.history.pushState({}, "", url);
+                  
+                  // Register as host after socket connects
+                  setTimeout(() => {
+                    if (socket) {
+                      socket.emit("register_host", roomNumber);
+                      socket.emit("update_setup_players", roomNumber, setupPlayers);
+                      socket.emit("update_initial_coins", roomNumber, initialCoins);
+                    }
+                  }, 500);
+                  
+                  setShowHostKeyInput(false);
+                  setKeyInput("");
+                  setRoomNumber("");
                 }}
                 className="py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black text-lg shadow-[0_5px_0_#e11d48] active:translate-y-1 active:shadow-none transition-all"
               >
-                {t("verify")}
+                {t("createRoom")}
               </button>
+              
               <button
                 onClick={() => {
                   setShowHostKeyInput(false);
                   setKeyInput("");
+                  setRoomNumber("");
                   setKeyError("");
                 }}
                 className="py-3 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 rounded-2xl font-bold text-base transition-all"
@@ -1446,30 +1499,22 @@ export default function App() {
           {/* Host controls */}
           {isHost ? (
             <div className="flex flex-wrap gap-3 w-full justify-center">
-              {/* Room Info / Create Room - Combined in one area */}
-              <div className="flex-1 min-w-[140px] flex flex-col gap-2">
-                {!isMultiplayer ? (
-                  <button
-                    onClick={createMultiplayerRoom}
-                    className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 whitespace-nowrap"
-                  >
-                    <Users size={20} /> {t("hostOnline")}
-                  </button>
-                ) : (
-                  <div className="w-full flex flex-col gap-2">
-                    <div className="bg-emerald-100 border-2 border-emerald-300 rounded-xl px-4 py-2 text-center">
-                      <span className="text-xs font-bold text-emerald-600 uppercase">{t("room")}</span>
-                      <div className="text-2xl font-black text-emerald-700 tracking-wider">{roomId}</div>
-                    </div>
-                    <button
-                      onClick={copyInviteLink}
-                      className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-sm shadow-[0_4px_0_#10b981] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2"
-                    >
-                      <Users size={16} /> {t("copyLink")}
-                    </button>
-                  </div>
-                )}
-              </div>
+              {!isMultiplayer ? (
+                <button
+                  onClick={createMultiplayerRoom}
+                  className="flex-1 min-w-[140px] py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  <Users size={20} /> {t("hostOnline")}
+                </button>
+              ) : (
+                <button
+                  onClick={copyInviteLink}
+                  className="flex-1 min-w-[140px] py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all flex flex-col items-center justify-center leading-tight"
+                >
+                  <span className="text-xs opacity-80">{t("room")}: {roomId}</span>
+                  <span>{t("copyLink")}</span>
+                </button>
+              )}
               <button
                 onClick={addAI}
                 className="flex-1 min-w-[120px] py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#3b82f6] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 whitespace-nowrap"
