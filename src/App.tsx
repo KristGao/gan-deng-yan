@@ -240,7 +240,7 @@ export default function App() {
     null,
     null,
   ]);
-  const [userName, setUserName] = useState(() => MEMBER_NAMES[Math.floor(Math.random() * MEMBER_NAMES.length)]);
+  const [userName, setUserName] = useState("主持人");
   const [userAvatar, setUserAvatar] = useState(IDLE_AVATARS[0]);
   const [initialCoins, setInitialCoinsState] = useState(100);
   const [showChat, setShowChat] = useState(false);
@@ -340,6 +340,8 @@ export default function App() {
           // If there's already a host, we are participant
           if (roomData.hostId !== null && userRole === null) {
             setUserRole("participant");
+            // Set random name for participant
+            setUserName(MEMBER_NAMES[Math.floor(Math.random() * MEMBER_NAMES.length)]);
             // Participant needs to manually choose a seat
           }
         }
@@ -356,6 +358,8 @@ export default function App() {
       socket.on("host_updated", (hostId: number | null) => {
         if (hostId !== null && userRole === null) {
           setUserRole("participant");
+          // Set random name for participant
+          setUserName(MEMBER_NAMES[Math.floor(Math.random() * MEMBER_NAMES.length)]);
         }
       });
 
@@ -972,6 +976,7 @@ export default function App() {
   const verifyGameKey = () => {
     if (keyInput === GAME_KEY) {
       setUserRole("host");
+      setUserName("主持人");
       setShowKeyInput(false);
       setKeyError("");
       // Set first available seat for host
