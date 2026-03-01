@@ -1325,66 +1325,68 @@ export default function App() {
           </p>
         </motion.div>
 
-        <div className="relative w-full max-w-4xl aspect-[16/9] bg-yellow-500/30 rounded-[100px] border-8 border-yellow-300/50 flex items-center justify-center">
-          {/* Table */}
-          <div className="absolute w-2/3 h-2/3 bg-yellow-300 rounded-full border-8 border-yellow-200 shadow-2xl flex items-center justify-center">
-            <div className="text-yellow-600 font-black text-4xl opacity-20 rotate-12">
-              {t("eggyTable")}
+        <div className="flex items-center justify-center gap-8 w-full max-w-6xl">
+          {/* Table Area */}
+          <div className="relative w-full max-w-2xl aspect-[16/9] bg-yellow-500/30 rounded-[100px] border-8 border-yellow-300/50 flex items-center justify-center">
+            {/* Table */}
+            <div className="absolute w-2/3 h-2/3 bg-yellow-300 rounded-full border-8 border-yellow-200 shadow-2xl flex items-center justify-center">
+              <div className="text-yellow-600 font-black text-4xl opacity-20 rotate-12">
+                {t("eggyTable")}
+              </div>
             </div>
-          </div>
 
-          {/* Seats */}
-          {setupPlayers.map((p, i) => {
-            const angles = [90, 162, 234, 306, 18];
-            const angle = angles[i];
-            const x = 40 * Math.cos((angle * Math.PI) / 180);
-            const y = 40 * Math.sin((angle * Math.PI) / 180);
-            const isMySeat = myPlayerId === i;
+            {/* Seats */}
+            {setupPlayers.map((p, i) => {
+              const angles = [90, 162, 234, 306, 18];
+              const angle = angles[i];
+              const x = 40 * Math.cos((angle * Math.PI) / 180);
+              const y = 40 * Math.sin((angle * Math.PI) / 180);
+              const isMySeat = myPlayerId === i;
 
-            return (
-              <motion.div
-                key={i}
-                style={{ left: `${50 + x}%`, top: `${50 + y}%` }}
-                className="absolute -translate-x-1/2 -translate-y-1/2"
-              >
-                {p ? (
-                  <div className="relative group">
-                    <motion.img
-                      whileHover={{ scale: 1.1 }}
-                      src={p.avatar}
-                      className={`w-24 h-24 rounded-full bg-white border-4 shadow-xl ${isMySeat ? "border-rose-400" : "border-white"}`}
-                    />
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md text-xs font-black text-zinc-800 whitespace-nowrap">
-                      {p.name} {isMySeat && "(我)"}
+              return (
+                <motion.div
+                  key={i}
+                  style={{ left: `${50 + x}%`, top: `${50 + y}%` }}
+                  className="absolute -translate-x-1/2 -translate-y-1/2"
+                >
+                  {p ? (
+                    <div className="relative group">
+                      <motion.img
+                        whileHover={{ scale: 1.1 }}
+                        src={p.avatar}
+                        className={`w-24 h-24 rounded-full bg-white border-4 shadow-xl ${isMySeat ? "border-rose-400" : "border-white"}`}
+                      />
+                      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md text-xs font-black text-zinc-800 whitespace-nowrap">
+                        {p.name} {isMySeat && "(我)"}
+                      </div>
+                      {/* Only allow leaving own seat */}
+                      {isMySeat && (
+                        <button
+                          onClick={() => joinTable(i)}
+                          className="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X size={16} />
+                        </button>
+                      )}
                     </div>
-                    {/* Only allow leaving own seat */}
-                    {isMySeat && (
+                  ) : (
+                    /* Only show empty seat button if not occupied and user hasn't joined yet */
+                    (isHost || myPlayerId === null) && (
                       <button
                         onClick={() => joinTable(i)}
-                        className="absolute -top-2 -right-2 bg-rose-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="w-20 h-20 rounded-full bg-yellow-200/50 border-4 border-dashed border-yellow-100 flex items-center justify-center text-yellow-100 hover:bg-yellow-200 transition-colors"
                       >
-                        <X size={16} />
+                        <Plus size={32} />
                       </button>
-                    )}
-                  </div>
-                ) : (
-                  /* Only show empty seat button if not occupied and user hasn't joined yet */
-                  (isHost || myPlayerId === null) && (
-                    <button
-                      onClick={() => joinTable(i)}
-                      className="w-20 h-20 rounded-full bg-yellow-200/50 border-4 border-dashed border-yellow-100 flex items-center justify-center text-yellow-100 hover:bg-yellow-200 transition-colors"
-                    >
-                      <Plus size={32} />
-                    </button>
-                  )
-                )}
-              </motion.div>
-            );
-          })}
-        </div>
+                    )
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
 
-        <div className="mt-12 flex flex-col items-center gap-6 w-full max-w-md">
-          <div className="bg-white p-6 rounded-3xl shadow-xl w-full flex flex-col gap-4">
+          {/* Right Side - Member Selection */}
+          <div className="bg-white p-6 rounded-3xl shadow-xl w-64 flex flex-col gap-4">
             <div className="flex items-center gap-4">
               <img
                 src={userAvatar}
@@ -1402,7 +1404,7 @@ export default function App() {
                 />
               </div>
             </div>
-            <div className="flex gap-2 overflow-x-auto py-2">
+            <div className="flex flex-wrap gap-2 justify-center py-2">
               {IDLE_AVATARS.map((av, idx) => (
                 <button
                   key={av}
@@ -1410,7 +1412,7 @@ export default function App() {
                     setUserAvatar(av);
                     setUserName(MEMBER_NAMES[idx]);
                   }}
-                  className={`flex-shrink-0 w-12 h-12 rounded-full border-4 transition-all ${userAvatar === av ? "border-yellow-400 scale-110" : "border-transparent opacity-50"}`}
+                  className={`w-12 h-12 rounded-full border-4 transition-all ${userAvatar === av ? "border-yellow-400 scale-110" : "border-transparent opacity-50"}`}
                 >
                   <img src={av} className="w-full h-full rounded-full object-cover" />
                 </button>
