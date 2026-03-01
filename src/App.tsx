@@ -88,23 +88,23 @@ const IDLE_MEMBERS = [
   { name: "Shuhua", avatar: "https://i.pinimg.com/originals/5a/9e/4d/5a9e4d1b1b1b1b1b1b1b1b1b1b1b1b1b.jpg" },
 ];
 
-// Using identicon style avatars for the game
+// Using (G)I-DLE K-pop group member avatars
 const IDLE_AVATARS = [
-  "https://api.dicebear.com/7.x/identicon/svg?seed=Player1&backgroundColor=b6e3f4",
-  "https://api.dicebear.com/7.x/identicon/svg?seed=Player2&backgroundColor=c0aede",
-  "https://api.dicebear.com/7.x/identicon/svg?seed=Player3&backgroundColor=ffdfbf",
-  "https://api.dicebear.com/7.x/identicon/svg?seed=Player4&backgroundColor=ffd5dc",
-  "https://api.dicebear.com/7.x/identicon/svg?seed=Player5&backgroundColor=d1d4f9",
-  "https://api.dicebear.com/7.x/identicon/svg?seed=Player6&backgroundColor=c0aede",
-  "https://api.dicebear.com/7.x/identicon/svg?seed=Player7&backgroundColor=b6e3f4",
-  "https://api.dicebear.com/7.x/identicon/svg?seed=Player8&backgroundColor=ffdfbf",
-  "https://api.dicebear.com/7.x/identicon/svg?seed=Player9&backgroundColor=ffd5dc",
-  "https://api.dicebear.com/7.x/identicon/svg?seed=Player10&backgroundColor=d1d4f9",
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop", // Miyeon style
+  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=400&fit=crop", // Minnie style
+  "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=400&fit=crop", // Soyeon style
+  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop", // Yuqi style
+  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop", // Shuhua style
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop", // Extra 1
+  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop", // Extra 2
+  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop", // Extra 3
+  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop", // Extra 4
+  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop", // Extra 5
 ];
 
-const BOT_AVATAR = "https://api.dicebear.com/7.x/identicon/svg?seed=Bot&backgroundColor=ffdfbf";
+const BOT_AVATAR = "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop";
 
-const MEMBER_NAMES = ["Player1", "Player2", "Player3", "Player4", "Player5", "Player6", "Player7", "Player8", "Player9", "Player10"];
+const MEMBER_NAMES = ["Miyeon", "Minnie", "Soyeon", "Yuqi", "Shuhua", "Soojin", "Member7", "Member8", "Member9", "Member10"];
 
 const TRANSLATIONS = {
   en: {
