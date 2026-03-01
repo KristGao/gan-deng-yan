@@ -1847,20 +1847,22 @@ export default function App() {
         <motion.div
           initial={{ y: 200 }}
           animate={{ y: 0 }}
-          className="bg-white p-8 rounded-t-[60px] shadow-[0_-20px_50px_rgba(0,0,0,0.1)] z-30"
+          className="fixed bottom-0 left-0 right-0 bg-white p-6 rounded-t-[40px] shadow-[0_-20px_50px_rgba(0,0,0,0.1)] z-30 h-[320px]"
         >
-          <div className="max-w-6xl mx-auto flex flex-col gap-6">
-            <div className="flex justify-between items-center">
+          <div className="max-w-6xl mx-auto h-full flex flex-col">
+            <div className="flex justify-between items-center flex-shrink-0 mb-4">
               <div className="flex items-center gap-4">
                 <img
                   src={viewingPlayer.avatar}
-                  className="w-16 h-16 rounded-full border-4 border-sky-100"
+                  className="w-14 h-14 rounded-full border-4 border-sky-100"
                 />
                 <div>
-                  <div className="text-2xl font-black text-zinc-800">
-                    {viewingPlayer.name}
+                  <div className="flex items-center gap-2">
+                    <div className="text-xl font-black text-zinc-800">
+                      {viewingPlayer.name}
+                    </div>
+                    {currentPlayer.id === viewingPlayer.id && <span className="text-amber-500">👑</span>}
                   </div>
-                  {currentPlayer.id === viewingPlayer.id && <span className="text-amber-500 text-lg">👑</span>}
                   <div className="text-sm font-bold text-sky-500 flex items-center gap-3">
                     <span>{viewingPlayer.hand.length} {t("cardsLeft")}</span>
                     <span className="flex items-center gap-1 text-yellow-500 bg-yellow-50 px-2 py-1 rounded-lg">
@@ -1870,59 +1872,61 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex gap-4">
-                <button
-                  onClick={handlePass}
-                  disabled={!isHumanTurn || !state.currentPlay}
-                  className="px-8 py-4 bg-zinc-100 hover:bg-zinc-200 disabled:opacity-30 text-zinc-400 rounded-3xl font-black text-xl transition-all flex items-center gap-2"
-                >
-                  <SkipForward size={24} /> {t("pass")}
-                </button>
-                <button
-                  onClick={playSelected}
-                  disabled={!isHumanTurn || selectedCards.length === 0}
-                  className="px-12 py-4 bg-yellow-400 hover:bg-yellow-500 disabled:opacity-30 text-white rounded-3xl font-black text-2xl shadow-[0_8px_0_#d97706] active:translate-y-2 active:shadow-none transition-all flex items-center gap-3"
-                >
-                  <PlayIcon size={28} className="fill-white" /> {t("play")}
-                </button>
+              <div className="flex items-center gap-4">
+                <div className="flex gap-2">
+                  <button
+                    onClick={handlePass}
+                    disabled={!isHumanTurn || !state.currentPlay}
+                    className="px-6 py-3 bg-zinc-100 hover:bg-zinc-200 disabled:opacity-30 text-zinc-400 rounded-2xl font-black text-lg transition-all flex items-center gap-2"
+                  >
+                    <SkipForward size={20} /> {t("pass")}
+                  </button>
+                  <button
+                    onClick={playSelected}
+                    disabled={!isHumanTurn || selectedCards.length === 0}
+                    className="px-10 py-3 bg-yellow-400 hover:bg-yellow-500 disabled:opacity-30 text-white rounded-2xl font-black text-xl shadow-[0_6px_0_#d97706] active:translate-y-1 active:shadow-none transition-all flex items-center gap-2"
+                  >
+                    <PlayIcon size={24} className="fill-white" /> {t("play")}
+                  </button>
+                </div>
+                
+                {/* Hosting toggle for human players */}
+                {humanPlayer && !humanPlayer.isAI && (
+                  <button
+                    onClick={() => {
+                      const updatedPlayers = state.players.map(p => 
+                        p.id === humanPlayer.id ? { ...p, isHosted: !p.isHosted } : p
+                      );
+                      updateState({ ...state, players: updatedPlayers });
+                    }}
+                    className={`px-4 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all ${
+                      humanPlayer.isHosted 
+                        ? "bg-orange-400 text-white shadow-[0_4px_0_#ea580c]" 
+                        : "bg-zinc-200 text-zinc-600 shadow-[0_4px_0_#a1a1aa]"
+                    }`}
+                  >
+                    {humanPlayer.isHosted ? (
+                      <>
+                        <Bot size={18} /> 托管中
+                      </>
+                    ) : (
+                      <>
+                        <User size={18} /> 托管
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
-              
-              {/* Hosting toggle for human players */}
-              {humanPlayer && !humanPlayer.isAI && (
-                <button
-                  onClick={() => {
-                    const updatedPlayers = state.players.map(p => 
-                      p.id === humanPlayer.id ? { ...p, isHosted: !p.isHosted } : p
-                    );
-                    updateState({ ...state, players: updatedPlayers });
-                  }}
-                  className={`mt-4 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all ${
-                    humanPlayer.isHosted 
-                      ? "bg-orange-400 text-white shadow-[0_4px_0_#ea580c]" 
-                      : "bg-zinc-200 text-zinc-600 shadow-[0_4px_0_#a1a1aa]"
-                  }`}
-                >
-                  {humanPlayer.isHosted ? (
-                    <>
-                      <Bot size={20} /> 托管中 (点击取消)
-                    </>
-                  ) : (
-                    <>
-                      <User size={20} /> 开启托管
-                    </>
-                  )}
-                </button>
-              )}
             </div>
 
-            <div className="h-[160px] overflow-y-auto overflow-x-hidden">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden">
               <div className="flex flex-wrap gap-2 justify-center py-2">
                 {viewingPlayer.hand.map((card, i) => (
                   <motion.div
                     key={card.id}
-                    initial={{ y: 50, opacity: 0 }}
+                    initial={{ y: 30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: i * 0.05 }}
+                    transition={{ delay: i * 0.03 }}
                     className="flex-shrink-0"
                   >
                     <CardView
