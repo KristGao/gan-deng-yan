@@ -1446,22 +1446,30 @@ export default function App() {
           {/* Host controls */}
           {isHost ? (
             <div className="flex flex-wrap gap-3 w-full justify-center">
-              {!isMultiplayer ? (
-                <button
-                  onClick={createMultiplayerRoom}
-                  className="flex-1 min-w-[140px] py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 whitespace-nowrap"
-                >
-                  <Users size={20} /> {t("hostOnline")}
-                </button>
-              ) : (
-                <button
-                  onClick={copyInviteLink}
-                  className="flex-1 min-w-[140px] py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all flex flex-col items-center justify-center leading-tight"
-                >
-                  <span className="text-xs opacity-80">{t("room")}: {roomId}</span>
-                  <span>{t("copyLink")}</span>
-                </button>
-              )}
+              {/* Room Info / Create Room - Combined in one area */}
+              <div className="flex-1 min-w-[140px] flex flex-col gap-2">
+                {!isMultiplayer ? (
+                  <button
+                    onClick={createMultiplayerRoom}
+                    className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#10b981] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                  >
+                    <Users size={20} /> {t("hostOnline")}
+                  </button>
+                ) : (
+                  <div className="w-full flex flex-col gap-2">
+                    <div className="bg-emerald-100 border-2 border-emerald-300 rounded-xl px-4 py-2 text-center">
+                      <span className="text-xs font-bold text-emerald-600 uppercase">{t("room")}</span>
+                      <div className="text-2xl font-black text-emerald-700 tracking-wider">{roomId}</div>
+                    </div>
+                    <button
+                      onClick={copyInviteLink}
+                      className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-sm shadow-[0_4px_0_#10b981] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2"
+                    >
+                      <Users size={16} /> {t("copyLink")}
+                    </button>
+                  </div>
+                )}
+              </div>
               <button
                 onClick={addAI}
                 className="flex-1 min-w-[120px] py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-2xl font-black text-base shadow-[0_5px_0_#3b82f6] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2 whitespace-nowrap"
