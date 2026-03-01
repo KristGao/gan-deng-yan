@@ -240,7 +240,7 @@ export default function App() {
     null,
     null,
   ]);
-  const [userName, setUserName] = useState("主持人");
+  const [userName, setUserName] = useState(() => MEMBER_NAMES[Math.floor(Math.random() * MEMBER_NAMES.length)]);
   const [userAvatar, setUserAvatar] = useState(IDLE_AVATARS[0]);
   const [initialCoins, setInitialCoinsState] = useState(100);
   const [showChat, setShowChat] = useState(false);
@@ -1409,11 +1409,11 @@ export default function App() {
                   className="absolute -translate-x-1/2 -translate-y-1/2"
                 >
                   {p ? (
-                    <div className="relative group">
+                    <div className="relative group w-24 h-24">
                       <motion.img
                         whileHover={{ scale: 1.1 }}
                         src={p.avatar}
-                        className={`w-24 h-24 rounded-full bg-white border-4 shadow-xl object-cover ${isMySeat ? "border-rose-400" : "border-white"}`}
+                        className={`w-full h-full rounded-full bg-white border-4 shadow-xl object-cover ${isMySeat ? "border-rose-400" : "border-white"}`}
                       />
                       <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md text-xs font-black text-zinc-800 whitespace-nowrap">
                         {p.name} {isMySeat && "(我)"}
@@ -1865,7 +1865,7 @@ export default function App() {
                   const isMe = sender.id === myPlayerId;
                   return (
                     <div key={msg.id} className={`flex gap-2 items-end ${isMe ? 'flex-row-reverse' : ''}`}>
-                      <img src={sender.avatar} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
+                      <img src={sender.avatar} className="w-8 h-8 rounded-full border-2 border-white shadow-sm object-cover" />
                       <div className={`px-4 py-2 rounded-2xl max-w-[75%] text-sm font-bold shadow-sm ${isMe ? 'bg-sky-500 text-white rounded-br-sm' : 'bg-white text-zinc-800 rounded-bl-sm border border-zinc-100'}`}>
                         {msg.text}
                       </div>
@@ -1920,7 +1920,7 @@ export default function App() {
               <div className="flex items-center gap-4">
                 <img
                   src={viewingPlayer.avatar}
-                  className="w-14 h-14 rounded-full border-4 border-sky-100"
+                  className="w-14 h-14 rounded-full border-4 border-sky-100 object-cover"
                 />
                 <div>
                   <div className="flex items-center gap-2">
@@ -1986,7 +1986,7 @@ export default function App() {
             </div>
 
             <div className="flex-1 overflow-y-auto overflow-x-hidden">
-              <div className="flex flex-wrap gap-2 justify-center py-2">
+              <div className="flex flex-wrap gap-2 justify-center py-2 pt-6">
                 {viewingPlayer.hand.map((card, i) => (
                   <motion.div
                     key={card.id}
