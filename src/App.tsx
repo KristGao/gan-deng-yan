@@ -1533,8 +1533,10 @@ export default function App() {
           {state.players.map((p, i) => {
             const angles = [90, 162, 234, 306, 18];
             const angle = angles[i];
-            const x = 38 * Math.cos((angle * Math.PI) / 180);
-            const y = 38 * Math.sin((angle * Math.PI) / 180);
+            // Reduce radius to keep all avatars visible above bottom controls
+            const radius = 30;
+            const x = radius * Math.cos((angle * Math.PI) / 180);
+            const y = radius * Math.sin((angle * Math.PI) / 180);
 
             const isCurrent = p.id === state.currentPlayerIndex;
 
