@@ -1360,7 +1360,7 @@ export default function App() {
                       <motion.img
                         whileHover={{ scale: 1.1 }}
                         src={p.avatar}
-                        className={`w-24 h-24 rounded-full bg-white border-4 shadow-xl ${isMySeat ? "border-rose-400" : "border-white"}`}
+                        className={`w-24 h-24 rounded-full bg-white border-4 shadow-xl object-cover ${isMySeat ? "border-rose-400" : "border-white"}`}
                       />
                       <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md text-xs font-black text-zinc-800 whitespace-nowrap">
                         {p.name} {isMySeat && "(我)"}
@@ -1396,7 +1396,7 @@ export default function App() {
             <div className="flex items-center gap-4">
               <img
                 src={userAvatar}
-                className="w-16 h-16 rounded-full bg-zinc-100 border-2 border-zinc-200"
+                className="w-16 h-16 rounded-full bg-zinc-100 border-2 border-zinc-200 object-cover"
               />
               <div className="flex-1 min-w-0">
                 <label className="text-xs font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap">
@@ -1562,7 +1562,7 @@ export default function App() {
                     animate={isCurrent ? { scale: [1, 1.2, 1] } : {}}
                     transition={{ repeat: Infinity, duration: 2 }}
                     src={p.avatar}
-                    className={`w-20 h-20 rounded-full bg-white border-4 shadow-xl transition-all ${isCurrent ? "border-yellow-400 scale-110" : "border-white/50"}`}
+                    className={`w-20 h-20 rounded-full bg-white border-4 shadow-xl transition-all object-cover ${isCurrent ? "border-yellow-400 scale-110" : "border-white/50"}`}
                   />
                   {isCurrent && (
                     <div className="absolute -top-2 -right-2 bg-yellow-400 text-white p-1 rounded-full shadow-lg animate-bounce">
