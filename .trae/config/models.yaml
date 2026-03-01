@@ -1,0 +1,357 @@
+# 🤖 多 Agent 模型配置文件
+# 版本: 1.0
+
+version: "1.0"
+
+# ============================================
+# 模型提供商配置
+# ============================================
+providers:
+  anthropic:
+    name: "Anthropic"
+    api_key: "${ANTHROPIC_API_KEY}"
+    base_url: "https://api.anthropic.com/v1"
+    models:
+      - "claude-3-5-sonnet-20241022"
+      - "claude-3-5-haiku-20241022"
+      - "claude-3-opus-20240229"
+    
+  openai:
+    name: "OpenAI"
+    api_key: "${OPENAI_API_KEY}"
+    base_url: "https://api.openai.com/v1"
+    models:
+      - "gpt-4o"
+      - "gpt-4o-mini"
+      - "gpt-4-turbo"
+    
+  google:
+    name: "Google"
+    api_key: "${GOOGLE_API_KEY}"
+    base_url: "https://generativelanguage.googleapis.com/v1"
+    models:
+      - "gemini-1.5-pro"
+      - "gemini-1.5-flash"
+
+# ============================================
+# Agent 模型配置
+# ============================================
+agents:
+  
+  # Master Agent - 主调度器
+  # 需要最强的逻辑推理和任务分解能力
+  master-agent:
+    name: "Master Agent"
+    description: "主调度代理 - 负责需求分析、任务调度、结果汇总"
+    model:
+      provider: "anthropic"
+      name: "claude-3-5-sonnet-20241022"
+      temperature: 0.3          # 低温度，更确定性的决策
+      max_tokens: 4096
+      top_p: 0.9
+      reasoning_effort: "high"  # 需要深度推理
+    
+    fallback:
+      - provider: "openai"
+        name: "gpt-4o"
+        temperature: 0.3
+        max_tokens: 4096
+    
+    capabilities:
+      - "需求分析"
+      - "任务分解"
+      - "逻辑推理"
+      - "协调调度"
+      - "结果汇总"
+    
+    use_cases:
+      - "新项目启动"
+      - "迭代规划"
+      - "复杂问题分析"
+
+  # Product Agent - 产品经理
+  # 需要创意和表达能力
+  product-agent:
+    name: "Product Agent"
+    description: "产品经理代理 - 负责功能设计、PRD编写、UX设计"
+    model:
+      provider: "openai"
+      name: "gpt-4o"
+      temperature: 0.7          # 高温度，更有创意
+      max_tokens: 4096
+      top_p: 0.95
+      reasoning_effort: "medium"
+    
+    fallback:
+      - provider: "google"
+        name: "gemini-1.5-pro"
+        temperature: 0.7
+        max_tokens: 4096
+    
+    capabilities:
+      - "功能设计"
+      - "PRD编写"
+      - "用户体验设计"
+      - "游戏规则设计"
+      - "文档编写"
+    
+    use_cases:
+      - "新功能设计"
+      - "UX优化"
+      - "规则文档编写"
+
+  # Tech Agent - 技术专家
+  # 需要最强的代码能力
+  tech-agent:
+    name: "Tech Agent"
+    description: "技术专家代理 - 负责代码实现、技术选型、Bug修复"
+    model:
+      provider: "anthropic"
+      name: "claude-3-5-sonnet-20241022"
+      temperature: 0.2          # 低温度，更精确的代码
+      max_tokens: 8192          # 代码可能需要更多token
+      top_p: 0.9
+      reasoning_effort: "high"
+    
+    fallback:
+      - provider: "openai"
+        name: "gpt-4o"
+        temperature: 0.2
+        max_tokens: 8192
+    
+    # 动态模型选择 - 根据任务复杂度
+    dynamic_selection:
+      enabled: true
+      rules:
+        simple_task:
+          model: "gpt-4o-mini"
+          max_lines: 100
+        medium_task:
+          model: "claude-3-5-sonnet-20241022"
+          max_lines: 500
+        complex_task:
+          model: "claude-3-5-sonnet-20241022"
+          max_lines: 100000
+    
+    capabilities:
+      - "代码生成"
+      - "代码审查"
+      - "Bug修复"
+      - "架构设计"
+      - "技术选型"
+      - "性能优化"
+    
+    use_cases:
+      - "功能实现"
+      - "Bug修复"
+      - "代码重构"
+      - "技术调研"
+
+  # Testing Agent - 测试专家
+  # 需要细致和批判性思维
+  testing-agent:
+    name: "Testing Agent"
+    description: "测试专家代理 - 负责测试设计、代码审查、质量评估"
+    model:
+      provider: "anthropic"
+      name: "claude-3-5-sonnet-20241022"
+      temperature: 0.2          # 低温度，更严谨
+      max_tokens: 4096
+      top_p: 0.9
+      reasoning_effort: "high"
+    
+    fallback:
+      - provider: "openai"
+        name: "gpt-4o-mini"
+        temperature: 0.2
+        max_tokens: 4096
+    
+    capabilities:
+      - "测试用例设计"
+      - "代码审查"
+      - "Bug分析"
+      - "质量评估"
+      - "测试报告"
+    
+    use_cases:
+      - "功能测试"
+      - "代码审查"
+      - "Bug分析"
+      - "质量评估"
+
+# ============================================
+# 路由规则
+# ============================================
+routing:
+  
+  # 任务类型路由
+  task_routing:
+    architecture_design:
+      description: "架构设计任务"
+      preferred_agent: "master-agent"
+      model_override: "claude-3-5-sonnet-20241022"
+    
+    feature_design:
+      description: "功能设计任务"
+      preferred_agent: "product-agent"
+    
+    code_implementation:
+      description: "代码实现任务"
+      preferred_agent: "tech-agent"
+    
+    bug_fix:
+      description: "Bug修复任务"
+      preferred_agent: "tech-agent"
+    
+    testing:
+      description: "测试验证任务"
+      preferred_agent: "testing-agent"
+    
+    code_review:
+      description: "代码审查任务"
+      preferred_agent: "testing-agent"
+    
+    documentation:
+      description: "文档编写任务"
+      preferred_agent: "product-agent"
+
+# ============================================
+# 性能优化配置
+# ============================================
+performance:
+  
+  # 缓存配置
+  cache:
+    enabled: true
+    ttl: 3600                   # 缓存1小时
+    max_size: 1000             # 最大缓存条目
+    storage: "memory"          # 内存存储
+  
+  # 并发控制
+  concurrency:
+    max_parallel_agents: 2     # 最大并行Agent数
+    max_parallel_requests: 5   # 最大并行请求数
+    timeout: 300               # 5分钟超时
+    retry_attempts: 3          # 重试次数
+  
+  # 重试策略
+  retry:
+    strategy: "exponential"    # 指数退避
+    initial_delay: 1000        # 初始延迟1秒
+    max_delay: 30000          # 最大延迟30秒
+    backoff_multiplier: 2
+
+# ============================================
+# 成本控制配置
+# ============================================
+cost_control:
+  
+  # 每日预算限制
+  daily_budget: 10.0           # 美元
+  
+  # 模型成本（每1K tokens）
+  model_costs:
+    "claude-3-5-sonnet-20241022":
+      input: 0.003
+      output: 0.015
+    "claude-3-5-haiku-20241022":
+      input: 0.00025
+      output: 0.00125
+    "gpt-4o":
+      input: 0.005
+      output: 0.015
+    "gpt-4o-mini":
+      input: 0.00015
+      output: 0.0006
+    "gemini-1.5-pro":
+      input: 0.0035
+      output: 0.0105
+    "gemini-1.5-flash":
+      input: 0.00035
+      output: 0.00105
+  
+  # 警告阈值
+  warning_threshold: 0.8       # 80%预算时警告
+  critical_threshold: 0.95     # 95%预算时限制
+  
+  # Agent 预算分配
+  agent_budgets:
+    master-agent: 3.0          # 30%
+    product-agent: 2.0         # 20%
+    tech-agent: 3.5            # 35%
+    testing-agent: 1.5         # 15%
+
+# ============================================
+# 日志和监控
+# ============================================
+monitoring:
+  
+  # 日志级别
+  log_level: "info"            # debug, info, warn, error
+  
+  # 指标收集
+  metrics:
+    enabled: true
+    collect:
+      - "response_time"
+      - "token_usage"
+      - "cost"
+      - "success_rate"
+      - "error_rate"
+  
+  # 报告生成
+  reports:
+    daily: true
+    weekly: true
+    format: "markdown"
+    output_dir: ".trae/logs/reports"
+
+# ============================================
+# 预设配置方案
+# ============================================
+presets:
+  
+  # 开发阶段 - 平衡质量和成本
+  development:
+    description: "开发阶段配置 - 平衡质量和成本"
+    agents:
+      master-agent: "claude-3-5-sonnet-20241022"
+      product-agent: "gpt-4o"
+      tech-agent: "claude-3-5-sonnet-20241022"
+      testing-agent: "claude-3-5-sonnet-20241022"
+    daily_budget: 10.0
+  
+  # 生产阶段 - 成本优化
+  production:
+    description: "生产阶段配置 - 成本优先"
+    agents:
+      master-agent: "gpt-4o-mini"
+      product-agent: "gemini-1.5-flash"
+      tech-agent: "claude-3-5-sonnet-20241022"
+      testing-agent: "gpt-4o-mini"
+    daily_budget: 5.0
+  
+  # 高质量 - 性能优先
+  high_quality:
+    description: "高质量配置 - 性能优先"
+    agents:
+      master-agent: "claude-3-5-sonnet-20241022"
+      product-agent: "gpt-4o"
+      tech-agent: "claude-3-5-sonnet-20241022"
+      testing-agent: "claude-3-5-sonnet-20241022"
+    daily_budget: 20.0
+  
+  # 快速原型 - 速度优先
+  rapid_prototype:
+    description: "快速原型配置 - 速度优先"
+    agents:
+      master-agent: "claude-3-5-haiku-20241022"
+      product-agent: "gemini-1.5-flash"
+      tech-agent: "gpt-4o-mini"
+      testing-agent: "gpt-4o-mini"
+    daily_budget: 3.0
+
+# ============================================
+# 当前激活配置
+# ============================================
+active_preset: "development"   # 可选: development, production, high_quality, rapid_prototype
