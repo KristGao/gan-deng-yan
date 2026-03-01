@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🤖 多 Agent 模型配置器</title>
+    <title>模型配置</title>
     <style>
         * {
             margin: 0;
@@ -12,139 +12,101 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.5;
+            padding: 40px 20px;
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 980px;
             margin: 0 auto;
         }
 
-        header {
+        h1 {
+            font-size: 48px;
+            font-weight: 600;
             text-align: center;
-            color: white;
+            margin-bottom: 8px;
+            letter-spacing: -0.015em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #86868b;
+            font-size: 21px;
+            margin-bottom: 60px;
+        }
+
+        /* Section */
+        .section {
+            background: #fff;
+            border-radius: 18px;
+            padding: 40px;
             margin-bottom: 30px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.04);
         }
 
-        header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-
-        header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        /* 预设选择卡片 */
-        .presets-section {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
+        .section-title {
+            font-size: 28px;
+            font-weight: 600;
             margin-bottom: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            letter-spacing: -0.021em;
         }
 
-        .presets-section h2 {
-            margin-bottom: 20px;
-            color: #333;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .presets-grid {
+        /* Presets */
+        .presets {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 16px;
         }
 
-        .preset-card {
-            border: 2px solid #e0e0e0;
+        .preset {
+            border: 1px solid #d2d2d7;
             border-radius: 12px;
             padding: 20px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
+            transition: all 0.2s ease;
+            text-align: center;
         }
 
-        .preset-card:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        .preset:hover {
+            border-color: #0071e3;
         }
 
-        .preset-card.active {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #f5f7ff 0%, #eef1ff 100%);
+        .preset.active {
+            border-color: #0071e3;
+            background: #f5faff;
         }
 
-        .preset-card .icon {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-
-        .preset-card h3 {
-            color: #333;
+        .preset-icon {
+            font-size: 32px;
             margin-bottom: 8px;
         }
 
-        .preset-card p {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 12px;
-        }
-
-        .preset-card .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+        .preset-name {
             font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 4px;
         }
 
-        .badge.development {
-            background: #e3f2fd;
-            color: #1976d2;
+        .preset-desc {
+            font-size: 12px;
+            color: #86868b;
         }
 
-        .badge.production {
-            background: #e8f5e9;
-            color: #388e3c;
-        }
-
-        .badge.high-quality {
-            background: #fff3e0;
-            color: #f57c00;
-        }
-
-        .badge.rapid {
-            background: #fce4ec;
-            color: #c2185b;
-        }
-
-        /* Agent 配置卡片 */
-        .agents-section {
+        /* Agents Grid */
+        .agents-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 24px;
-            margin-bottom: 24px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
         }
 
         .agent-card {
-            background: white;
-            border-radius: 16px;
+            border: 1px solid #d2d2d7;
+            border-radius: 12px;
             padding: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .agent-card:hover {
-            transform: translateY(-4px);
         }
 
         .agent-header {
@@ -152,585 +114,429 @@
             align-items: center;
             gap: 12px;
             margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid #f0f0f0;
         }
 
         .agent-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 20px;
         }
 
-        .agent-icon.master {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .agent-icon.product {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        .agent-icon.tech {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        .agent-icon.testing {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
+        .agent-icon.master { background: #e8f4fd; }
+        .agent-icon.product { background: #fef4e8; }
+        .agent-icon.tech { background: #e8fdf4; }
+        .agent-icon.testing { background: #f4e8fd; }
 
         .agent-title h3 {
-            color: #333;
-            margin-bottom: 4px;
+            font-size: 17px;
+            font-weight: 600;
         }
 
         .agent-title p {
-            color: #666;
-            font-size: 0.85rem;
+            font-size: 12px;
+            color: #86868b;
         }
 
+        /* Form Elements */
         .form-group {
             margin-bottom: 16px;
         }
 
-        .form-group label {
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
             display: block;
-            margin-bottom: 6px;
-            color: #555;
+            font-size: 13px;
             font-weight: 500;
-            font-size: 0.9rem;
+            color: #1d1d1f;
+            margin-bottom: 6px;
         }
 
-        .form-group select,
-        .form-group input[type="range"] {
+        select {
             width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
+            padding: 10px 12px;
+            border: 1px solid #d2d2d7;
             border-radius: 8px;
-            font-size: 0.95rem;
-            transition: border-color 0.3s;
+            font-size: 14px;
+            background: #fff;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
         }
 
-        .form-group select:focus {
+        select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #0071e3;
         }
 
-        .range-container {
+        .slider-container {
             display: flex;
             align-items: center;
             gap: 12px;
         }
 
-        .range-container input[type="range"] {
+        input[type="range"] {
             flex: 1;
             -webkit-appearance: none;
-            height: 6px;
-            border-radius: 3px;
-            background: #e0e0e0;
+            height: 4px;
+            border-radius: 2px;
+            background: #d2d2d7;
             outline: none;
         }
 
-        .range-container input[type="range"]::-webkit-slider-thumb {
+        input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            appearance: none;
-            width: 18px;
-            height: 18px;
+            width: 20px;
+            height: 20px;
             border-radius: 50%;
-            background: #667eea;
+            background: #fff;
+            border: 1px solid #0071e3;
             cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .range-value {
-            min-width: 50px;
-            text-align: center;
-            font-weight: 600;
-            color: #667eea;
+        .slider-value {
+            min-width: 36px;
+            text-align: right;
+            font-size: 14px;
+            color: #0071e3;
+            font-weight: 500;
         }
 
-        .capabilities {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid #f0f0f0;
-        }
-
-        .capabilities h4 {
-            color: #555;
-            font-size: 0.85rem;
-            margin-bottom: 10px;
-        }
-
-        .capability-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .capability-tag {
-            background: #f5f5f5;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            color: #666;
-        }
-
-        /* 成本估算区域 */
-        .cost-section {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-        }
-
-        .cost-section h2 {
-            margin-bottom: 20px;
-            color: #333;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
+        /* Cost Section */
         .cost-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
         }
 
         .cost-item {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
-            padding: 16px;
-            border-radius: 12px;
             text-align: center;
         }
 
-        .cost-item .label {
-            color: #666;
-            font-size: 0.85rem;
-            margin-bottom: 8px;
+        .cost-label {
+            font-size: 12px;
+            color: #86868b;
+            margin-bottom: 4px;
         }
 
-        .cost-item .value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #333;
+        .cost-value {
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: -0.021em;
         }
 
-        .cost-item.daily .value {
-            color: #667eea;
+        .note {
+            font-size: 13px;
+            color: #86868b;
+            text-align: center;
         }
 
-        .cost-item.monthly .value {
-            color: #764ba2;
-        }
-
-        /* 操作按钮 */
+        /* Actions */
         .actions {
-            background: white;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
             display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
+            gap: 12px;
             justify-content: center;
         }
 
-        .btn {
-            padding: 14px 32px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
+        button {
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            transition: all 0.2s;
+            border: none;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #0071e3;
+            color: #fff;
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            background: #0077ed;
         }
 
         .btn-secondary {
-            background: #f5f5f5;
-            color: #555;
+            background: #e8e8ed;
+            color: #1d1d1f;
         }
 
         .btn-secondary:hover {
-            background: #e8e8e8;
+            background: #dedee3;
         }
 
-        /* 配置预览 */
-        .preview-section {
-            background: #1e1e1e;
-            border-radius: 16px;
+        /* Preview */
+        .preview {
+            background: #1d1d1f;
+            border-radius: 12px;
             padding: 24px;
-            margin-top: 24px;
-            color: #d4d4d4;
-            font-family: 'Consolas', 'Monaco', monospace;
-            overflow-x: auto;
+            margin-top: 30px;
         }
 
-        .preview-section h3 {
-            color: #fff;
+        .preview-title {
+            color: #f5f5f7;
+            font-size: 14px;
+            font-weight: 600;
             margin-bottom: 16px;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         .preview-content {
-            white-space: pre-wrap;
-            font-size: 0.85rem;
+            font-family: "SF Mono", Monaco, monospace;
+            font-size: 13px;
             line-height: 1.6;
+            color: #d4d4d4;
+            overflow-x: auto;
+            white-space: pre-wrap;
         }
 
-        .yaml-key {
-            color: #9cdcfe;
-        }
+        .yaml-key { color: #9cdcfe; }
+        .yaml-string { color: #ce9178; }
+        .yaml-number { color: #b5cea8; }
 
-        .yaml-string {
-            color: #ce9178;
-        }
-
-        .yaml-number {
-            color: #b5cea8;
-        }
-
-        /* 响应式 */
+        /* Responsive */
         @media (max-width: 768px) {
-            header h1 {
-                font-size: 1.8rem;
-            }
-
-            .agents-section {
-                grid-template-columns: 1fr;
-            }
-
-            .presets-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* 提示信息 */
-        .info-box {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            color: #1565c0;
-        }
-
-        .warning-box {
-            background: #fff3e0;
-            border-left: 4px solid #ff9800;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            color: #e65100;
+            h1 { font-size: 32px; }
+            .subtitle { font-size: 17px; }
+            .presets { grid-template-columns: repeat(2, 1fr); }
+            .agents-grid { grid-template-columns: 1fr; }
+            .cost-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>🤖 多 Agent 模型配置器</h1>
-            <p>为不同的 Agent 配置最适合的 AI 模型</p>
-        </header>
+        <h1>模型配置</h1>
+        <p class="subtitle">为每个 Agent 选择最适合的 AI 模型</p>
 
-        <div class="info-box">
-            <strong>💡 提示：</strong>选择预设方案快速配置，或自定义每个 Agent 的模型参数。配置完成后可以导出 YAML 文件。
+        <!-- Presets -->
+        <div class="section">
+            <h2 class="section-title">快速预设</h2>
+            <div class="presets">
+                <div class="preset active" data-preset="development" onclick="selectPreset('development')">
+                    <div class="preset-icon">⚖️</div>
+                    <div class="preset-name">开发阶段</div>
+                    <div class="preset-desc">平衡质量与成本</div>
+                </div>
+                <div class="preset" data-preset="production" onclick="selectPreset('production')">
+                    <div class="preset-icon">💰</div>
+                    <div class="preset-name">生产阶段</div>
+                    <div class="preset-desc">成本优化</div>
+                </div>
+                <div class="preset" data-preset="high_quality" onclick="selectPreset('high_quality')">
+                    <div class="preset-icon">✨</div>
+                    <div class="preset-name">高质量</div>
+                    <div class="preset-desc">性能优先</div>
+                </div>
+                <div class="preset" data-preset="rapid" onclick="selectPreset('rapid')">
+                    <div class="preset-icon">🚀</div>
+                    <div class="preset-name">快速原型</div>
+                    <div class="preset-desc">速度优先</div>
+                </div>
+            </div>
         </div>
 
-        <!-- 预设选择 -->
-        <section class="presets-section">
-            <h2>🎯 快速预设</h2>
-            <div class="presets-grid">
-                <div class="preset-card active" data-preset="development" onclick="selectPreset('development')">
-                    <div class="icon">⚖️</div>
-                    <h3>开发阶段</h3>
-                    <p>平衡质量和成本，适合日常开发</p>
-                    <span class="badge development">推荐</span>
-                </div>
-                <div class="preset-card" data-preset="production" onclick="selectPreset('production')">
-                    <div class="icon">💰</div>
-                    <h3>生产阶段</h3>
-                    <p>成本优化，适合稳定运行</p>
-                    <span class="badge production">低成本</span>
-                </div>
-                <div class="preset-card" data-preset="high_quality" onclick="selectPreset('high_quality')">
-                    <div class="icon">✨</div>
-                    <h3>高质量</h3>
-                    <p>性能优先，适合关键功能</p>
-                    <span class="badge high-quality">高性能</span>
-                </div>
-                <div class="preset-card" data-preset="rapid" onclick="selectPreset('rapid')">
-                    <div class="icon">🚀</div>
-                    <h3>快速原型</h3>
-                    <p>速度优先，适合快速验证</p>
-                    <span class="badge rapid">极速</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Agent 配置 -->
-        <section class="agents-section">
-            <!-- Master Agent -->
-            <div class="agent-card">
-                <div class="agent-header">
-                    <div class="agent-icon master">🎛️</div>
-                    <div class="agent-title">
-                        <h3>Master Agent</h3>
-                        <p>主调度代理 - 需求分析与任务协调</p>
+        <!-- Agents -->
+        <div class="section">
+            <h2 class="section-title">Agent 配置</h2>
+            <div class="agents-grid">
+                <!-- Master -->
+                <div class="agent-card">
+                    <div class="agent-header">
+                        <div class="agent-icon master">🎛️</div>
+                        <div class="agent-title">
+                            <h3>Master Agent</h3>
+                            <p>主调度代理</p>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>选择模型</label>
-                    <select id="master-model" onchange="updateConfig()">
-                        <option value="claude-3-5-sonnet-20241022" selected>Claude 3.5 Sonnet (推荐)</option>
-                        <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
-                        <option value="gpt-4o">GPT-4o</option>
-                        <option value="gpt-4o-mini">GPT-4o Mini</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Temperature (创造性)</label>
-                    <div class="range-container">
-                        <input type="range" id="master-temp" min="0" max="100" value="30" oninput="updateTempDisplay('master', this.value); updateConfig()">
-                        <span class="range-value" id="master-temp-value">0.3</span>
+                    <div class="form-group">
+                        <label>模型</label>
+                        <select id="master-model" onchange="updateConfig()">
+                            <option value="claude-3-5-sonnet-20241022" selected>Claude 3.5 Sonnet</option>
+                            <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+                            <option value="gpt-4o">GPT-4o</option>
+                            <option value="gpt-4o-mini">GPT-4o Mini</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Temperature</label>
+                        <div class="slider-container">
+                            <input type="range" id="master-temp" min="0" max="100" value="30" oninput="updateTemp('master', this.value)">
+                            <span class="slider-value" id="master-temp-value">0.3</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Tokens</label>
+                        <select id="master-tokens" onchange="updateConfig()">
+                            <option value="2048">2,048</option>
+                            <option value="4096" selected>4,096</option>
+                            <option value="8192">8,192</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Max Tokens</label>
-                    <select id="master-tokens" onchange="updateConfig()">
-                        <option value="2048">2,048</option>
-                        <option value="4096" selected>4,096</option>
-                        <option value="8192">8,192</option>
-                    </select>
-                </div>
-
-                <div class="capabilities">
-                    <h4>核心能力</h4>
-                    <div class="capability-tags">
-                        <span class="capability-tag">需求分析</span>
-                        <span class="capability-tag">任务分解</span>
-                        <span class="capability-tag">逻辑推理</span>
-                        <span class="capability-tag">协调调度</span>
+                <!-- Product -->
+                <div class="agent-card">
+                    <div class="agent-header">
+                        <div class="agent-icon product">📋</div>
+                        <div class="agent-title">
+                            <h3>Product Agent</h3>
+                            <p>产品经理代理</p>
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Product Agent -->
-            <div class="agent-card">
-                <div class="agent-header">
-                    <div class="agent-icon product">📋</div>
-                    <div class="agent-title">
-                        <h3>Product Agent</h3>
-                        <p>产品经理代理 - 功能设计与文档编写</p>
+                    <div class="form-group">
+                        <label>模型</label>
+                        <select id="product-model" onchange="updateConfig()">
+                            <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                            <option value="gpt-4o" selected>GPT-4o</option>
+                            <option value="gpt-4o-mini">GPT-4o Mini</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        </select>
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>选择模型</label>
-                    <select id="product-model" onchange="updateConfig()">
-                        <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
-                        <option value="gpt-4o" selected>GPT-4o (推荐)</option>
-                        <option value="gpt-4o-mini">GPT-4o Mini</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Temperature (创造性)</label>
-                    <div class="range-container">
-                        <input type="range" id="product-temp" min="0" max="100" value="70" oninput="updateTempDisplay('product', this.value); updateConfig()">
-                        <span class="range-value" id="product-temp-value">0.7</span>
+                    <div class="form-group">
+                        <label>Temperature</label>
+                        <div class="slider-container">
+                            <input type="range" id="product-temp" min="0" max="100" value="70" oninput="updateTemp('product', this.value)">
+                            <span class="slider-value" id="product-temp-value">0.7</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Tokens</label>
+                        <select id="product-tokens" onchange="updateConfig()">
+                            <option value="2048">2,048</option>
+                            <option value="4096" selected>4,096</option>
+                            <option value="8192">8,192</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Max Tokens</label>
-                    <select id="product-tokens" onchange="updateConfig()">
-                        <option value="2048">2,048</option>
-                        <option value="4096" selected>4,096</option>
-                        <option value="8192">8,192</option>
-                    </select>
-                </div>
-
-                <div class="capabilities">
-                    <h4>核心能力</h4>
-                    <div class="capability-tags">
-                        <span class="capability-tag">功能设计</span>
-                        <span class="capability-tag">PRD编写</span>
-                        <span class="capability-tag">UX设计</span>
-                        <span class="capability-tag">文档编写</span>
+                <!-- Tech -->
+                <div class="agent-card">
+                    <div class="agent-header">
+                        <div class="agent-icon tech">💻</div>
+                        <div class="agent-title">
+                            <h3>Tech Agent</h3>
+                            <p>技术专家代理</p>
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Tech Agent -->
-            <div class="agent-card">
-                <div class="agent-header">
-                    <div class="agent-icon tech">💻</div>
-                    <div class="agent-title">
-                        <h3>Tech Agent</h3>
-                        <p>技术专家代理 - 代码实现与Bug修复</p>
+                    <div class="form-group">
+                        <label>模型</label>
+                        <select id="tech-model" onchange="updateConfig()">
+                            <option value="claude-3-5-sonnet-20241022" selected>Claude 3.5 Sonnet</option>
+                            <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+                            <option value="gpt-4o">GPT-4o</option>
+                            <option value="gpt-4o-mini">GPT-4o Mini</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                        </select>
                     </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>选择模型</label>
-                    <select id="tech-model" onchange="updateConfig()">
-                        <option value="claude-3-5-sonnet-20241022" selected>Claude 3.5 Sonnet (推荐)</option>
-                        <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
-                        <option value="gpt-4o">GPT-4o</option>
-                        <option value="gpt-4o-mini">GPT-4o Mini</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Temperature (创造性)</label>
-                    <div class="range-container">
-                        <input type="range" id="tech-temp" min="0" max="100" value="20" oninput="updateTempDisplay('tech', this.value); updateConfig()">
-                        <span class="range-value" id="tech-temp-value">0.2</span>
+                    <div class="form-group">
+                        <label>Temperature</label>
+                        <div class="slider-container">
+                            <input type="range" id="tech-temp" min="0" max="100" value="20" oninput="updateTemp('tech', this.value)">
+                            <span class="slider-value" id="tech-temp-value">0.2</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Tokens</label>
+                        <select id="tech-tokens" onchange="updateConfig()">
+                            <option value="4096">4,096</option>
+                            <option value="8192" selected>8,192</option>
+                            <option value="16384">16,384</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Max Tokens</label>
-                    <select id="tech-tokens" onchange="updateConfig()">
-                        <option value="4096">4,096</option>
-                        <option value="8192" selected>8,192 (推荐)</option>
-                        <option value="16384">16,384</option>
-                    </select>
-                </div>
-
-                <div class="capabilities">
-                    <h4>核心能力</h4>
-                    <div class="capability-tags">
-                        <span class="capability-tag">代码生成</span>
-                        <span class="capability-tag">Bug修复</span>
-                        <span class="capability-tag">架构设计</span>
-                        <span class="capability-tag">技术选型</span>
+                <!-- Testing -->
+                <div class="agent-card">
+                    <div class="agent-header">
+                        <div class="agent-icon testing">🧪</div>
+                        <div class="agent-title">
+                            <h3>Testing Agent</h3>
+                            <p>测试专家代理</p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>模型</label>
+                        <select id="testing-model" onchange="updateConfig()">
+                            <option value="claude-3-5-sonnet-20241022" selected>Claude 3.5 Sonnet</option>
+                            <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+                            <option value="gpt-4o">GPT-4o</option>
+                            <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Temperature</label>
+                        <div class="slider-container">
+                            <input type="range" id="testing-temp" min="0" max="100" value="20" oninput="updateTemp('testing', this.value)">
+                            <span class="slider-value" id="testing-temp-value">0.2</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Tokens</label>
+                        <select id="testing-tokens" onchange="updateConfig()">
+                            <option value="2048">2,048</option>
+                            <option value="4096" selected>4,096</option>
+                            <option value="8192">8,192</option>
+                        </select>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Testing Agent -->
-            <div class="agent-card">
-                <div class="agent-header">
-                    <div class="agent-icon testing">🧪</div>
-                    <div class="agent-title">
-                        <h3>Testing Agent</h3>
-                        <p>测试专家代理 - 测试设计与质量把控</p>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>选择模型</label>
-                    <select id="testing-model" onchange="updateConfig()">
-                        <option value="claude-3-5-sonnet-20241022" selected>Claude 3.5 Sonnet (推荐)</option>
-                        <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
-                        <option value="gpt-4o">GPT-4o</option>
-                        <option value="gpt-4o-mini">GPT-4o Mini</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Temperature (创造性)</label>
-                    <div class="range-container">
-                        <input type="range" id="testing-temp" min="0" max="100" value="20" oninput="updateTempDisplay('testing', this.value); updateConfig()">
-                        <span class="range-value" id="testing-temp-value">0.2</span>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Max Tokens</label>
-                    <select id="testing-tokens" onchange="updateConfig()">
-                        <option value="2048">2,048</option>
-                        <option value="4096" selected>4,096</option>
-                        <option value="8192">8,192</option>
-                    </select>
-                </div>
-
-                <div class="capabilities">
-                    <h4>核心能力</h4>
-                    <div class="capability-tags">
-                        <span class="capability-tag">测试设计</span>
-                        <span class="capability-tag">代码审查</span>
-                        <span class="capability-tag">Bug分析</span>
-                        <span class="capability-tag">质量评估</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 成本估算 -->
-        <section class="cost-section">
-            <h2>💰 成本估算</h2>
+        <!-- Cost -->
+        <div class="section">
+            <h2 class="section-title">成本估算</h2>
             <div class="cost-grid">
-                <div class="cost-item daily">
-                    <div class="label">预估日成本</div>
-                    <div class="value" id="daily-cost">$4.02</div>
-                </div>
-                <div class="cost-item monthly">
-                    <div class="label">预估月成本</div>
-                    <div class="value" id="monthly-cost">$120.60</div>
+                <div class="cost-item">
+                    <div class="cost-label">预估日成本</div>
+                    <div class="cost-value" id="daily-cost">$4.02</div>
                 </div>
                 <div class="cost-item">
-                    <div class="label">日均 Token 用量</div>
-                    <div class="value" id="daily-tokens">220K</div>
+                    <div class="cost-label">预估月成本</div>
+                    <div class="cost-value" id="monthly-cost">$120.60</div>
                 </div>
                 <div class="cost-item">
-                    <div class="label">配置复杂度</div>
-                    <div class="value" id="complexity-score">中等</div>
+                    <div class="cost-label">日均 Token</div>
+                    <div class="cost-value" id="daily-tokens">220K</div>
+                </div>
+                <div class="cost-item">
+                    <div class="cost-label">配置</div>
+                    <div class="cost-value" style="font-size: 21px;">中等</div>
                 </div>
             </div>
-            <div class="warning-box">
-                <strong>⚠️ 注意：</strong>成本估算基于典型使用场景，实际成本可能因使用量而异。建议设置预算上限。
+            <p class="note">成本估算基于典型使用场景，实际成本可能因使用量而异</p>
+        </div>
+
+        <!-- Actions -->
+        <div class="section" style="text-align: center;">
+            <div class="actions">
+                <button class="btn-primary" onclick="exportConfig()">导出配置</button>
+                <button class="btn-secondary" onclick="copyConfig()">复制</button>
+                <button class="btn-secondary" onclick="resetConfig()">重置</button>
             </div>
-        </section>
+        </div>
 
-        <!-- 操作按钮 -->
-        <section class="actions">
-            <button class="btn btn-primary" onclick="exportConfig()">
-                📥 导出 YAML 配置
-            </button>
-            <button class="btn btn-secondary" onclick="copyConfig()">
-                📋 复制配置
-            </button>
-            <button class="btn btn-secondary" onclick="resetConfig()">
-                🔄 重置默认
-            </button>
-        </section>
-
-        <!-- 配置预览 -->
-        <section class="preview-section">
-            <h3>📄 配置预览 (models.yaml)</h3>
-            <pre class="preview-content" id="config-preview"></pre>
-        </section>
+        <!-- Preview -->
+        <div class="preview">
+            <div class="preview-title">models.yaml</div>
+            <pre class="preview-content" id="preview"></pre>
+        </div>
     </div>
 
     <script>
-        // 预设配置
         const presets = {
             development: {
                 master: { model: 'claude-3-5-sonnet-20241022', temp: 30, tokens: 4096 },
@@ -766,185 +572,84 @@
             }
         };
 
-        // 模型成本 (每 1K tokens)
-        const modelCosts = {
-            'claude-3-5-sonnet-20241022': { input: 0.003, output: 0.015 },
-            'claude-3-5-haiku-20241022': { input: 0.00025, output: 0.00125 },
-            'gpt-4o': { input: 0.005, output: 0.015 },
-            'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
-            'gemini-1.5-pro': { input: 0.0035, output: 0.0105 },
-            'gemini-1.5-flash': { input: 0.00035, output: 0.00105 }
-        };
+        function selectPreset(name) {
+            const p = presets[name];
+            if (!p) return;
 
-        // 选择预设
-        function selectPreset(presetName) {
-            const preset = presets[presetName];
-            if (!preset) return;
+            document.querySelectorAll('.preset').forEach(el => el.classList.remove('active'));
+            document.querySelector(`[data-preset="${name}"]`).classList.add('active');
 
-            // 更新 UI
-            document.querySelectorAll('.preset-card').forEach(card => {
-                card.classList.remove('active');
+            ['master', 'product', 'tech', 'testing'].forEach(agent => {
+                document.getElementById(`${agent}-model`).value = p[agent].model;
+                document.getElementById(`${agent}-temp`).value = p[agent].temp;
+                document.getElementById(`${agent}-temp-value`).textContent = (p[agent].temp / 100).toFixed(1);
+                document.getElementById(`${agent}-tokens`).value = p[agent].tokens;
             });
-            document.querySelector(`[data-preset="${presetName}"]`).classList.add('active');
 
-            // 应用配置
-            applyAgentConfig('master', preset.master);
-            applyAgentConfig('product', preset.product);
-            applyAgentConfig('tech', preset.tech);
-            applyAgentConfig('testing', preset.testing);
-
-            // 更新成本
-            document.getElementById('daily-cost').textContent = `$${preset.dailyCost.toFixed(2)}`;
-            document.getElementById('monthly-cost').textContent = `$${preset.monthlyCost.toFixed(2)}`;
+            document.getElementById('daily-cost').textContent = `$${p.dailyCost.toFixed(2)}`;
+            document.getElementById('monthly-cost').textContent = `$${p.monthlyCost.toFixed(2)}`;
 
             updateConfig();
         }
 
-        // 应用 Agent 配置
-        function applyAgentConfig(agent, config) {
-            document.getElementById(`${agent}-model`).value = config.model;
-            document.getElementById(`${agent}-temp`).value = config.temp;
-            document.getElementById(`${agent}-temp-value`).textContent = (config.temp / 100).toFixed(1);
-            document.getElementById(`${agent}-tokens`).value = config.tokens;
-        }
-
-        // 更新温度显示
-        function updateTempDisplay(agent, value) {
+        function updateTemp(agent, value) {
             document.getElementById(`${agent}-temp-value`).textContent = (value / 100).toFixed(1);
+            updateConfig();
         }
 
-        // 更新配置预览
         function updateConfig() {
-            const config = generateYAML();
-            document.getElementById('config-preview').innerHTML = syntaxHighlight(config);
-            updateCostEstimate();
+            const yaml = generateYAML();
+            document.getElementById('preview').innerHTML = highlight(yaml);
         }
 
-        // 生成 YAML 配置
         function generateYAML() {
-            const agents = ['master', 'product', 'tech', 'testing'];
-            const agentNames = {
-                master: 'Master Agent',
-                product: 'Product Agent',
-                tech: 'Tech Agent',
-                testing: 'Testing Agent'
-            };
-            const agentDescs = {
-                master: '主调度代理 - 负责需求分析、任务调度、结果汇总',
-                product: '产品经理代理 - 负责功能设计、PRD编写、UX设计',
-                tech: '技术专家代理 - 负责代码实现、技术选型、Bug修复',
-                testing: '测试专家代理 - 负责测试设计、代码审查、质量评估'
-            };
-
-            let yaml = `version: "1.0"
-
-# ============================================
-# Agent 模型配置
-# ============================================
-agents:\n`;
-
-            agents.forEach(agent => {
+            let yaml = 'version: "1.0"\n\nagents:\n';
+            
+            ['master', 'product', 'tech', 'testing'].forEach(agent => {
                 const model = document.getElementById(`${agent}-model`).value;
                 const temp = document.getElementById(`${agent}-temp`).value;
                 const tokens = document.getElementById(`${agent}-tokens`).value;
+                const provider = model.includes('claude') ? 'anthropic' : model.includes('gpt') ? 'openai' : 'google';
                 
-                yaml += `
-  ${agent}-agent:
-    name: "${agentNames[agent]}"
-    description: "${agentDescs[agent]}"
-    model:
-      provider: "${getProvider(model)}"
-      name: "${model}"
-      temperature: ${(temp / 100).toFixed(1)}
-      max_tokens: ${tokens}
-`;
-            });
+                const names = {
+                    master: 'Master Agent',
+                    product: 'Product Agent', 
+                    tech: 'Tech Agent',
+                    testing: 'Testing Agent'
+                };
 
-            yaml += `
-# ============================================
-# 当前激活配置
-# ============================================
-active_preset: "custom"
-`;
+                yaml += `\n  ${agent}-agent:\n    name: "${names[agent]}"\n    model:\n      provider: "${provider}"\n      name: "${model}"\n      temperature: ${(temp/100).toFixed(1)}\n      max_tokens: ${tokens}\n`;
+            });
 
             return yaml;
         }
 
-        // 获取模型提供商
-        function getProvider(model) {
-            if (model.includes('claude')) return 'anthropic';
-            if (model.includes('gpt')) return 'openai';
-            if (model.includes('gemini')) return 'google';
-            return 'unknown';
-        }
-
-        // 更新成本估算
-        function updateCostEstimate() {
-            const agents = ['master', 'product', 'tech', 'testing'];
-            let totalDailyCost = 0;
-            let totalTokens = 0;
-
-            agents.forEach(agent => {
-                const model = document.getElementById(`${agent}-model`).value;
-                const cost = modelCosts[model];
-                if (cost) {
-                    // 估算每个 agent 的日用量 (input + output)
-                    const usage = agent === 'tech' ? 100 : 50; // Tech Agent 用量更大
-                    const agentCost = (usage * (cost.input + cost.output * 2)); // output 通常更多
-                    totalDailyCost += agentCost;
-                    totalTokens += usage;
-                }
-            });
-
-            document.getElementById('daily-cost').textContent = `$${totalDailyCost.toFixed(2)}`;
-            document.getElementById('monthly-cost').textContent = `$${(totalDailyCost * 30).toFixed(2)}`;
-            document.getElementById('daily-tokens').textContent = `${totalTokens}K`;
-        }
-
-        // YAML 语法高亮
-        function syntaxHighlight(yaml) {
+        function highlight(yaml) {
             return yaml
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/(".*?")/g, '<span class="yaml-string">$1</span>')
-                .replace(/(version|agents|model|active_preset)/g, '<span class="yaml-key">$1</span>')
+                .replace(/(version|agents|model|provider|name|temperature|max_tokens)/g, '<span class="yaml-key">$1</span>')
+                .replace(/: "([^"]+)"/g, ': <span class="yaml-string">"$1"</span>')
                 .replace(/: (\d+\.?\d*)/g, ': <span class="yaml-number">$1</span>');
         }
 
-        // 导出配置
         function exportConfig() {
-            const config = generateYAML();
-            const blob = new Blob([config], { type: 'text/yaml' });
+            const blob = new Blob([generateYAML()], { type: 'text/yaml' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = 'models.yaml';
-            document.body.appendChild(a);
             a.click();
-            document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
 
-        // 复制配置
         function copyConfig() {
-            const config = generateYAML();
-            navigator.clipboard.writeText(config).then(() => {
-                alert('配置已复制到剪贴板！');
-            });
+            navigator.clipboard.writeText(generateYAML());
         }
 
-        // 重置配置
         function resetConfig() {
-            if (confirm('确定要重置为默认配置吗？')) {
-                selectPreset('development');
-            }
+            if (confirm('重置为默认配置？')) selectPreset('development');
         }
 
-        // 初始化
-        document.addEventListener('DOMContentLoaded', () => {
-            updateConfig();
-        });
+        updateConfig();
     </script>
 </body>
 </html>
