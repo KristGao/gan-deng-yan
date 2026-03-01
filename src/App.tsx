@@ -1915,21 +1915,24 @@ export default function App() {
               )}
             </div>
 
-            <div className="flex flex-wrap gap-4 justify-center min-h-[140px] py-4">
-              {viewingPlayer.hand.map((card, i) => (
-                <motion.div
-                  key={card.id}
-                  initial={{ y: 50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: i * 0.05 }}
-                >
-                  <CardView
-                    card={card}
-                    selected={selectedCards.includes(card.id)}
-                    onClick={() => isHumanTurn && toggleCardSelection(card.id)}
-                  />
-                </motion.div>
-              ))}
+            <div className="h-[160px] overflow-y-auto overflow-x-hidden">
+              <div className="flex flex-wrap gap-2 justify-center py-2">
+                {viewingPlayer.hand.map((card, i) => (
+                  <motion.div
+                    key={card.id}
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex-shrink-0"
+                  >
+                    <CardView
+                      card={card}
+                      selected={selectedCards.includes(card.id)}
+                      onClick={() => isHumanTurn && toggleCardSelection(card.id)}
+                    />
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
