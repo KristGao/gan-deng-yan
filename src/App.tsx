@@ -88,23 +88,23 @@ const IDLE_MEMBERS = [
   { name: "Shuhua", avatar: "https://i.pinimg.com/originals/5a/9e/4d/5a9e4d1b1b1b1b1b1b1b1b1b1b1b1b1b.jpg" },
 ];
 
-// Using more reliable high-quality placeholder images for the members
+// Using cartoon character avatars for the game
 const IDLE_AVATARS = [
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop", // Soyeon style
-  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=400&fit=crop", // Miyeon style
-  "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&h=400&fit=crop", // Minnie style
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop", // Yuqi style
-  "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=400&fit=crop", // Shuhua style
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop", // Lisa style
-  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop", // Jennie style
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop", // Jisoo style
-  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop", // Rose style
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop", // Chaeyoung style
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4", // Felix - Blue
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Luna&backgroundColor=c0aede", // Luna - Purple
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Max&backgroundColor=ffdfbf", // Max - Orange
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Zoe&backgroundColor=ffdfbf", // Zoe - Pink
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Leo&backgroundColor=d1d4f9", // Leo - Indigo
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Aria&backgroundColor=ffd5dc", // Aria - Rose
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Kai&backgroundColor=c0aede", // Kai - Violet
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Mia&backgroundColor=b6e3f4", // Mia - Sky
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Noah&backgroundColor=ffdfbf", // Noah - Peach
+  "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma&backgroundColor=d1d4f9", // Emma - Lavender
 ];
 
-const BOT_AVATAR = "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop"; // Eggy character style
+const BOT_AVATAR = "https://api.dicebear.com/7.x/bottts/svg?seed=Robot&backgroundColor=ffdfbf"; // Robot bot avatar
 
-const MEMBER_NAMES = ["Soyeon", "Miyeon", "Minnie", "Yuqi", "Shuhua", "Lisa", "Jennie", "Jisoo", "Rose", "Chaeyoung"];
+const MEMBER_NAMES = ["Felix", "Luna", "Max", "Zoe", "Leo", "Aria", "Kai", "Mia", "Noah", "Emma"];
 
 const TRANSLATIONS = {
   en: {
