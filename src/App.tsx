@@ -45,6 +45,11 @@ type RoundResult = {
   coinsChange: number;
   coinsTotal: number;
   isEliminated: boolean;
+  remainingCards: number;
+  baseMultiplier: number;
+  personalMultiplier: number;
+  totalMultiplier: number;
+  neverPlayed: boolean;
 };
 
 type ChatMessage = {
@@ -69,6 +74,7 @@ type GameState = {
   diceRolls: Record<number, number | null>;
   hostId: number | null;
   gameKey: string;
+  hasPlayedCards: Record<number, boolean>;
 };
 
 type UserRole = "host" | "participant" | null;
@@ -259,6 +265,7 @@ export default function App() {
     diceRolls: {},
     hostId: null,
     gameKey: "",
+    hasPlayedCards: {},
   });
   const [selectedCards, setSelectedCards] = useState<string[]>([]);
   
@@ -518,6 +525,7 @@ export default function App() {
       diceRolls: Object.fromEntries(players.map(p => [p.id, null])),
       hostId: state.hostId,
       gameKey: state.gameKey,
+      hasPlayedCards: Object.fromEntries(players.map(p => [p.id, false])),
     });
     setSelectedCards([]);
   };
@@ -728,6 +736,9 @@ export default function App() {
       p.id === currentPlayer.id ? { ...currentPlayer, hand: newHand } : p
     );
 
+    // Mark player as having played cards
+    const newHasPlayedCards = { ...state.hasPlayedCards, [currentPlayer.id]: true };
+
     playSound("play");
     // Play voice for card playing
     const playerGender = currentPlayer.gender || (currentPlayer.id % 2 === 0 ? "male" : "female");
@@ -771,7 +782,14 @@ export default function App() {
       
       const finalPlayers = newPlayers.map(p => {
         if (p.id === currentPlayer.id) return p;
-        const penalty = p.hand.length * newMultiplier;
+        
+        // Check if player never played cards (only for human players, not AI)
+        const neverPlayed = !state.hasPlayedCards[p.id];
+        // Personal multiplier: if human player never played, double their penalty
+        const personalMultiplier = (!p.isAI && neverPlayed) ? 2 : 1;
+        const totalMultiplier = newMultiplier * personalMultiplier;
+        
+        const penalty = p.hand.length * totalMultiplier;
         const actualPenalty = Math.min(penalty, p.coins);
         totalWon += actualPenalty;
         
@@ -782,7 +800,12 @@ export default function App() {
           avatar: p.avatar,
           coinsChange: -actualPenalty,
           coinsTotal: newCoins,
-          isEliminated: newCoins <= 0
+          isEliminated: newCoins <= 0,
+          remainingCards: p.hand.length,
+          baseMultiplier: newMultiplier,
+          personalMultiplier,
+          totalMultiplier,
+          neverPlayed,
         });
         
         return { ...p, coins: newCoins };
@@ -797,7 +820,12 @@ export default function App() {
         avatar: currentPlayer.avatar,
         coinsChange: totalWon,
         coinsTotal: finalPlayers[winnerIndex].coins,
-        isEliminated: false
+        isEliminated: false,
+        remainingCards: 0,
+        baseMultiplier: newMultiplier,
+        personalMultiplier: 1,
+        totalMultiplier: newMultiplier,
+        neverPlayed: false,
       });
 
       roundResults.sort((a, b) => b.coinsChange - a.coinsChange);
@@ -810,6 +838,7 @@ export default function App() {
         players: finalPlayers,
         multiplier: newMultiplier,
         roundResults,
+        hasPlayedCards: newHasPlayedCards,
       });
       return;
     }
@@ -820,7 +849,7 @@ export default function App() {
     const nextPlayerId = state.players[nextPlayerArrayIndex].id;
     
     nextTurn(
-      { ...state, multiplier: newMultiplier },
+      { ...state, multiplier: newMultiplier, hasPlayedCards: newHasPlayedCards },
       nextPlayerId,
       state.deck,
       newPlayers,
@@ -1607,20 +1636,37 @@ export default function App() {
 
                 <div className="flex flex-col gap-2 mb-8 text-left w-full bg-zinc-50 p-4 rounded-2xl max-h-48 overflow-y-auto">
                   {state.roundResults.map(r => (
-                    <div key={r.playerId} className="flex items-center justify-between font-bold text-sm">
-                      <div className="flex items-center gap-2">
-                        <img src={r.avatar} className="w-8 h-8 rounded-full object-cover" />
-                        <span className={r.isEliminated ? "line-through text-zinc-400" : "text-zinc-700"}>
-                          {r.name}
-                        </span>
-                        {r.isEliminated && <span className="text-xs text-rose-500 bg-rose-100 px-2 py-0.5 rounded-full">{t("out")}</span>}
+                    <div key={r.playerId} className="flex flex-col gap-1 p-2 bg-white rounded-xl">
+                      <div className="flex items-center justify-between font-bold text-sm">
+                        <div className="flex items-center gap-2">
+                          <img src={r.avatar} className="w-8 h-8 rounded-full object-cover" />
+                          <span className={r.isEliminated ? "line-through text-zinc-400" : "text-zinc-700"}>
+                            {r.name}
+                          </span>
+                          {r.isEliminated && <span className="text-xs text-rose-500 bg-rose-100 px-2 py-0.5 rounded-full">{t("out")}</span>}
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className={r.coinsChange > 0 ? "text-emerald-500" : r.coinsChange < 0 ? "text-rose-500" : "text-zinc-400"}>
+                            {r.coinsChange > 0 ? "+" : ""}{r.coinsChange}
+                          </span>
+                          <span className="text-yellow-500 w-12 text-right">💰 {r.coinsTotal}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <span className={r.coinsChange > 0 ? "text-emerald-500" : r.coinsChange < 0 ? "text-rose-500" : "text-zinc-400"}>
-                          {r.coinsChange > 0 ? "+" : ""}{r.coinsChange}
-                        </span>
-                        <span className="text-yellow-500 w-12 text-right">💰 {r.coinsTotal}</span>
-                      </div>
+                      {r.playerId !== state.winner && (
+                        <div className="flex items-center justify-between text-xs text-zinc-500 pl-10">
+                          <div className="flex items-center gap-2">
+                            <span>剩余: {r.remainingCards}张</span>
+                            <span className="text-sky-500">基础x{r.baseMultiplier}</span>
+                            {r.personalMultiplier > 1 && (
+                              <span className="text-rose-500 font-bold">个人x{r.personalMultiplier}</span>
+                            )}
+                            {r.neverPlayed && (
+                              <span className="text-rose-500 bg-rose-100 px-1.5 py-0.5 rounded-full">未出牌</span>
+                            )}
+                          </div>
+                          <span className="font-bold text-zinc-700">总x{r.totalMultiplier}</span>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
