@@ -36,6 +36,7 @@ type Player = {
   avatar: string;
   coins: number;
   gender?: "male" | "female";
+  isHosted?: boolean;
 };
 
 type RoundResult = {
@@ -890,9 +891,13 @@ export default function App() {
     if (state.status !== "playing") return;
 
     const currentPlayer = state.players.find(p => p.id === state.currentPlayerIndex);
-    if (!currentPlayer || !currentPlayer.isAI) return;
+    if (!currentPlayer) return;
     
-    // In multiplayer, only the host runs AI logic to prevent duplicate actions
+    // Check if current player is AI or hosted (auto-play)
+    const shouldAutoPlay = currentPlayer.isAI || currentPlayer.isHosted;
+    if (!shouldAutoPlay) return;
+    
+    // In multiplayer, only the host runs AI/hosted logic to prevent duplicate actions
     if (isMultiplayer && userRole !== "host") return;
 
     const timer = setTimeout(() => {
@@ -1477,6 +1482,7 @@ export default function App() {
     
   const isHumanTurn =
     !currentPlayer.isAI &&
+    !currentPlayer.isHosted &&
     state.status === "playing" &&
     currentPlayer.id === humanPlayer?.id;
     
@@ -1555,6 +1561,7 @@ export default function App() {
                   </div>
                   <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-3 py-1 rounded-full shadow-md text-[10px] font-black whitespace-nowrap flex items-center gap-1">
                     <span>{p.name}</span>
+                    {p.isHosted && <span className="text-orange-500">🤖</span>}
                     {state.winner === p.id && <span className="text-amber-500">👑</span>}
                     <span className="text-sky-500">({p.hand.length})</span>
                   </div>
@@ -1849,6 +1856,33 @@ export default function App() {
                   <PlayIcon size={28} className="fill-white" /> {t("play")}
                 </button>
               </div>
+              
+              {/* Hosting toggle for human players */}
+              {humanPlayer && !humanPlayer.isAI && (
+                <button
+                  onClick={() => {
+                    const updatedPlayers = state.players.map(p => 
+                      p.id === humanPlayer.id ? { ...p, isHosted: !p.isHosted } : p
+                    );
+                    updateState({ ...state, players: updatedPlayers });
+                  }}
+                  className={`mt-4 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all ${
+                    humanPlayer.isHosted 
+                      ? "bg-orange-400 text-white shadow-[0_4px_0_#ea580c]" 
+                      : "bg-zinc-200 text-zinc-600 shadow-[0_4px_0_#a1a1aa]"
+                  }`}
+                >
+                  {humanPlayer.isHosted ? (
+                    <>
+                      <Bot size={20} /> 托管中 (点击取消)
+                    </>
+                  ) : (
+                    <>
+                      <User size={20} /> 开启托管
+                    </>
+                  )}
+                </button>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-4 justify-center min-h-[140px] py-4">
