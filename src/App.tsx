@@ -88,23 +88,23 @@ const IDLE_MEMBERS = [
   { name: "Shuhua", avatar: "https://i.pinimg.com/originals/5a/9e/4d/5a9e4d1b1b1b1b1b1b1b1b1b1b1b1b1b.jpg" },
 ];
 
-// Using cartoon character avatars for the game
+// Using identicon style avatars for the game
 const IDLE_AVATARS = [
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=b6e3f4", // Felix - Blue
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Luna&backgroundColor=c0aede", // Luna - Purple
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Max&backgroundColor=ffdfbf", // Max - Orange
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Zoe&backgroundColor=ffdfbf", // Zoe - Pink
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Leo&backgroundColor=d1d4f9", // Leo - Indigo
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Aria&backgroundColor=ffd5dc", // Aria - Rose
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Kai&backgroundColor=c0aede", // Kai - Violet
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Mia&backgroundColor=b6e3f4", // Mia - Sky
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Noah&backgroundColor=ffdfbf", // Noah - Peach
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Emma&backgroundColor=d1d4f9", // Emma - Lavender
+  "https://api.dicebear.com/7.x/identicon/svg?seed=Player1&backgroundColor=b6e3f4",
+  "https://api.dicebear.com/7.x/identicon/svg?seed=Player2&backgroundColor=c0aede",
+  "https://api.dicebear.com/7.x/identicon/svg?seed=Player3&backgroundColor=ffdfbf",
+  "https://api.dicebear.com/7.x/identicon/svg?seed=Player4&backgroundColor=ffd5dc",
+  "https://api.dicebear.com/7.x/identicon/svg?seed=Player5&backgroundColor=d1d4f9",
+  "https://api.dicebear.com/7.x/identicon/svg?seed=Player6&backgroundColor=c0aede",
+  "https://api.dicebear.com/7.x/identicon/svg?seed=Player7&backgroundColor=b6e3f4",
+  "https://api.dicebear.com/7.x/identicon/svg?seed=Player8&backgroundColor=ffdfbf",
+  "https://api.dicebear.com/7.x/identicon/svg?seed=Player9&backgroundColor=ffd5dc",
+  "https://api.dicebear.com/7.x/identicon/svg?seed=Player10&backgroundColor=d1d4f9",
 ];
 
-const BOT_AVATAR = "https://api.dicebear.com/7.x/bottts/svg?seed=Robot&backgroundColor=ffdfbf"; // Robot bot avatar
+const BOT_AVATAR = "https://api.dicebear.com/7.x/identicon/svg?seed=Bot&backgroundColor=ffdfbf";
 
-const MEMBER_NAMES = ["Felix", "Luna", "Max", "Zoe", "Leo", "Aria", "Kai", "Mia", "Noah", "Emma"];
+const MEMBER_NAMES = ["Player1", "Player2", "Player3", "Player4", "Player5", "Player6", "Player7", "Player8", "Player9", "Player10"];
 
 const TRANSLATIONS = {
   en: {
