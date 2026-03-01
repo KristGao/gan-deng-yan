@@ -1623,7 +1623,7 @@ export default function App() {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="text-center bg-white p-12 rounded-[50px] shadow-2xl border-8 border-yellow-400 max-w-lg w-full"
+                className="text-center bg-white p-8 rounded-[50px] shadow-2xl border-8 border-yellow-400 max-w-4xl w-full"
               >
                 <h2 className="text-5xl font-black mb-2 text-rose-500 italic tracking-tighter">
                   {state.status === "gameover" ? t("gameOver") : t("roundOver")}
@@ -1641,39 +1641,69 @@ export default function App() {
                   </p>
                 </div>
 
-                <div className="flex flex-col gap-2 mb-8 text-left w-full bg-zinc-50 p-4 rounded-2xl max-h-48 overflow-y-auto">
+                {/* Horizontal player cards */}
+                <div className="flex flex-wrap justify-center gap-4 mb-8">
                   {state.roundResults.map(r => (
-                    <div key={r.playerId} className="flex flex-col gap-1 p-2 bg-white rounded-xl">
-                      <div className="flex items-center justify-between font-bold text-sm">
-                        <div className="flex items-center gap-2">
-                          <img src={r.avatar} className="w-8 h-8 rounded-full object-cover" />
-                          <span className={r.isEliminated ? "line-through text-zinc-400" : "text-zinc-700"}>
-                            {r.name}
-                          </span>
-                          {r.isEliminated && <span className="text-xs text-rose-500 bg-rose-100 px-2 py-0.5 rounded-full">{t("out")}</span>}
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <span className={r.coinsChange > 0 ? "text-emerald-500" : r.coinsChange < 0 ? "text-rose-500" : "text-zinc-400"}>
-                            {r.coinsChange > 0 ? "+" : ""}{r.coinsChange}
-                          </span>
-                          <span className="text-yellow-500 w-12 text-right">💰 {r.coinsTotal}</span>
-                        </div>
+                    <div 
+                      key={r.playerId} 
+                      className={`flex flex-col items-center p-4 rounded-2xl min-w-[140px] ${
+                        r.playerId === state.winner 
+                          ? "bg-yellow-100 border-4 border-yellow-400" 
+                          : "bg-zinc-50 border-2 border-zinc-200"
+                      }`}
+                    >
+                      {/* Avatar and Name */}
+                      <div className="relative mb-2">
+                        <img 
+                          src={r.avatar} 
+                          className={`w-16 h-16 rounded-full object-cover border-4 ${
+                            r.playerId === state.winner ? "border-yellow-400" : "border-white"
+                          }`} 
+                        />
+                        {r.playerId === state.winner && (
+                          <div className="absolute -top-1 -right-1 bg-yellow-400 text-white p-1 rounded-full shadow-lg">
+                            👑
+                          </div>
+                        )}
+                        {r.isEliminated && (
+                          <div className="absolute -bottom-1 -right-1 bg-rose-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                            {t("out")}
+                          </div>
+                        )}
                       </div>
+                      
+                      <span className={`font-bold text-sm mb-2 ${r.isEliminated ? "line-through text-zinc-400" : "text-zinc-700"}`}>
+                        {r.name}
+                      </span>
+                      
+                      {/* Stats for non-winners */}
                       {r.playerId !== state.winner && (
-                        <div className="flex items-center justify-between text-xs text-zinc-500 pl-10">
-                          <div className="flex items-center gap-2">
-                            <span>剩余: {r.remainingCards}张</span>
+                        <div className="flex flex-col items-center gap-1 text-xs text-zinc-500 mb-2">
+                          <span>剩余: {r.remainingCards}张</span>
+                          <div className="flex items-center gap-1">
                             <span className="text-sky-500">基础x{r.baseMultiplier}</span>
                             {r.personalMultiplier > 1 && (
                               <span className="text-rose-500 font-bold">个人x{r.personalMultiplier}</span>
                             )}
-                            {r.neverPlayed && (
-                              <span className="text-rose-500 bg-rose-100 px-1.5 py-0.5 rounded-full">未出牌</span>
-                            )}
                           </div>
+                          {r.neverPlayed && (
+                            <span className="text-rose-500 bg-rose-100 px-2 py-0.5 rounded-full text-[10px]">未出牌</span>
+                          )}
                           <span className="font-bold text-zinc-700">总x{r.totalMultiplier}</span>
                         </div>
                       )}
+                      
+                      {/* Coins change */}
+                      <div className={`font-black text-lg ${
+                        r.coinsChange > 0 ? "text-emerald-500" : r.coinsChange < 0 ? "text-rose-500" : "text-zinc-400"
+                      }`}>
+                        {r.coinsChange > 0 ? "+" : ""}{r.coinsChange}
+                      </div>
+                      
+                      {/* Total coins */}
+                      <div className="text-yellow-500 font-bold text-sm mt-1">
+                        💰 {r.coinsTotal}
+                      </div>
                     </div>
                   ))}
                 </div>
